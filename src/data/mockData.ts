@@ -6,6 +6,7 @@ export interface University {
   city: string;
   lat: number;
   lng: number;
+  address?: string;
 }
 
 export interface PG {
@@ -144,8 +145,9 @@ export const universities: University[] = [
     id: 'pcu-pune',
     name: 'Pimpri Chinchwad University (PCU)',
     city: 'Pune',
-    lat: 18.7333,
-    lng: 73.6767,
+    lat: 18.728565,
+    lng: 73.674178,
+    address: '49 50, Plot No. 44, Mohitewadi Rd, Mohitewadi, Maharashtra 412106',
   },
   
   // Pune - Engineering Colleges
@@ -575,6 +577,85 @@ export const pgs: PG[] = [
     gender: 'female',
     amenities: ['WiFi', 'Meals', 'AC', 'Security'],
     distance: 1.1,
+  },
+  // Near PCU Pune
+  {
+    id: 'pg-pcu-1',
+    name: 'Talegaon Boys Hostel',
+    lat: 18.7298,
+    lng: 73.6725,
+    universityId: 'pcu-pune',
+    rent: 5500,
+    rating: 4.0,
+    verified: true,
+    gender: 'male',
+    amenities: ['WiFi', 'Meals', 'AC', 'Laundry'],
+    distance: 0.5,
+  },
+  {
+    id: 'pg-pcu-2',
+    name: 'Mohitewadi Ladies PG',
+    lat: 18.7265,
+    lng: 73.6758,
+    universityId: 'pcu-pune',
+    rent: 6000,
+    rating: 4.3,
+    verified: true,
+    gender: 'female',
+    amenities: ['WiFi', 'Meals', 'AC', 'Security', 'Gym'],
+    distance: 0.6,
+  },
+  {
+    id: 'pg-pcu-3',
+    name: 'PCU Campus View PG',
+    lat: 18.7312,
+    lng: 73.6695,
+    universityId: 'pcu-pune',
+    rent: 5000,
+    rating: 3.8,
+    verified: false,
+    gender: 'male',
+    amenities: ['WiFi', 'Meals', 'Parking'],
+    distance: 0.8,
+  },
+  {
+    id: 'pg-pcu-4',
+    name: 'Sate Student Accommodation',
+    lat: 18.7278,
+    lng: 73.6802,
+    universityId: 'pcu-pune',
+    rent: 6500,
+    rating: 4.5,
+    verified: true,
+    gender: 'unisex',
+    amenities: ['WiFi', 'Meals', 'AC', 'Security', 'Study Room'],
+    distance: 0.9,
+  },
+  {
+    id: 'pg-pcu-5',
+    name: 'Talegaon Girls Residence',
+    lat: 18.7325,
+    lng: 73.6718,
+    universityId: 'pcu-pune',
+    rent: 5800,
+    rating: 4.2,
+    verified: true,
+    gender: 'female',
+    amenities: ['WiFi', 'Meals', 'Security', 'Laundry'],
+    distance: 1.0,
+  },
+  {
+    id: 'pg-pcu-6',
+    name: 'Highway View Co-living',
+    lat: 18.7245,
+    lng: 73.6785,
+    universityId: 'pcu-pune',
+    rent: 7000,
+    rating: 4.4,
+    verified: true,
+    gender: 'unisex',
+    amenities: ['WiFi', 'Meals', 'AC', 'Gym', 'Common Area'],
+    distance: 1.2,
   },
   // Near COEP Pune
   {

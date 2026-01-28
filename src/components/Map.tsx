@@ -62,7 +62,7 @@ export default function Map({
 
   // Handle university selection from dropdown
   const handleUniversitySelect = (university: University) => {
-    setSearchQuery(university.name);
+    setSearchQuery('');
     setShowDropdown(false);
     
     // Pan and zoom to selected university
@@ -132,27 +132,6 @@ export default function Map({
       `,
       iconSize: [32, 32],
       iconAnchor: [16, 16],
-    });
-
-    const pgIcon = L.divIcon({
-      className: 'custom-pg-marker',
-      html: `
-        <div style="
-          background-color: #10b981;
-          width: 28px;
-          height: 28px;
-          border-radius: 50%;
-          border: 2px solid white;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 14px;
-          color: white;
-        ">🏠</div>
-      `,
-      iconSize: [28, 28],
-      iconAnchor: [14, 14],
     });
 
     const selectedUniversityIcon = L.divIcon({
@@ -246,8 +225,45 @@ export default function Map({
       markersRef.current.push(marker);
     });
 
-    // Add PG markers
+    // Add PG markers with different colors based on gender
     pgs.forEach((pg) => {
+      // Different colors for different gender types
+      const pgColors = {
+        male: '#3B82F6',      // Blue
+        female: '#EC4899',    // Pink
+        unisex: '#10B981'     // Green
+      };
+
+      const pgIcon = L.divIcon({
+        className: 'custom-pg-marker',
+        html: `
+          <div style="
+            background-color: ${pgColors[pg.gender]};
+            width: 32px;
+            height: 32px;
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          ">
+            <div style="
+              transform: rotate(45deg);
+              color: white;
+              font-size: 16px;
+              font-weight: bold;
+            ">
+              ${pg.gender === 'male' ? '♂' : pg.gender === 'female' ? '♀' : '⚥'}
+            </div>
+          </div>
+        `,
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32]
+      });
+
       const marker = L.marker([pg.lat, pg.lng], {
         icon: pgIcon,
         title: pg.name,
@@ -348,7 +364,7 @@ export default function Map({
   return (
     <div className="relative w-full h-full">
       {/* University Search Bar */}
-      <div className="absolute top-4 left-4 right-4 z-[1000] max-w-md">
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] w-full max-w-md px-4">
         <div className="relative">
           <div className="relative">
             <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />

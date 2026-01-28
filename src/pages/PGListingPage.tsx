@@ -26,6 +26,7 @@ export default function PGListingPage() {
   const [selectedUniversity, setSelectedUniversity] = useState<University | null>(null);
   const [filteredPGs, setFilteredPGs] = useState<PG[]>([]);
   const [selectedPG, setSelectedPG] = useState<PG | null>(null);
+  const [showPGs, setShowPGs] = useState(false);
   const [filters, setFilters] = useState<PGFilterOptions>({
     maxRent: undefined,
     minRating: undefined,
@@ -35,6 +36,7 @@ export default function PGListingPage() {
 
   const handleUniversityClick = (university: University) => {
     setSelectedUniversity(university);
+    setShowPGs(true);
     
     // Find PGs within 5km of this university
     const nearbyPGs = filterPGsByUniversity(pgs, university, 5);
@@ -53,6 +55,7 @@ export default function PGListingPage() {
     setSelectedUniversity(null);
     setFilteredPGs([]);
     setSelectedPG(null);
+    setShowPGs(false);
     setFilters({
       maxRent: undefined,
       minRating: undefined,
@@ -143,7 +146,7 @@ export default function PGListingPage() {
             <Card className="h-[calc(100vh-200px)] overflow-hidden">
               <Map
                 universities={puneUniversities}
-                pgs={filteredPGs}
+                pgs={showPGs ? filteredPGs : []}
                 onUniversityClick={handleUniversityClick}
                 onPGClick={handlePGClick}
                 selectedUniversityId={selectedUniversity?.id}
