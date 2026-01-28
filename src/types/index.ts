@@ -52,6 +52,76 @@ export interface SafetyRating {
   };
 }
 
+// Enhanced User Profile System for Smart Matching
+export interface UserProfile {
+  id: string;
+  name: string;
+  age: number;
+  gender: 'male' | 'female' | 'other';
+  phone: string;
+  email: string;
+  city: string;
+  college?: string;
+  company?: string;
+  verified: boolean;
+  avatar?: string;
+  createdAt: Date;
+}
+
+export interface UserPreferences {
+  userId: string;
+  
+  // Living Preferences
+  budgetMin: number;
+  budgetMax: number;
+  preferredAreas: string[];
+  roomSharing: 'single' | 'double' | 'triple';
+  moveInDate: Date;
+  stayDuration: number; // in months
+  
+  // Lifestyle Matching (Core - weighted heavily)
+  cleanlinessLevel: 1 | 2 | 3 | 4 | 5; // 1=messy, 5=very clean - 25% weight
+  sleepTime: 'early' | 'normal' | 'late'; // 10-11pm / 11-12am / 12-2am - 20% weight
+  wakeTime: 'early' | 'normal' | 'late'; // 6-7am / 7-9am / 9am+ - 20% weight
+  foodPreference: 'veg' | 'non-veg' | 'egg' | 'vegan'; // 15% weight
+  smoking: 'no' | 'occasionally' | 'yes'; // 15% weight
+  drinking: 'no' | 'occasionally' | 'yes'; // 15% weight
+  noiseTolerance: 'low' | 'medium' | 'high'; // 10% weight
+  guestsFrequency: 'rare' | 'sometimes' | 'often'; // 10% weight
+  
+  // Personality Layer (Optional - 5% weight)
+  introvertExtrovert: 1 | 2 | 3 | 4 | 5; // 1=introvert, 5=extrovert
+  conflictHandling: 'calm' | 'direct' | 'avoidant';
+  workSchedule: 'student' | 'working' | 'hybrid';
+  
+  // Additional preferences
+  acPreference: boolean;
+  languageComfort: string[];
+  genderPreference?: 'male' | 'female' | 'any';
+}
+
+export interface MatchResult {
+  userId: string;
+  matchedUserId: string;
+  matchScore: number; // 0-100
+  breakdown: MatchBreakdown;
+  status: 'pending' | 'accepted' | 'rejected';
+  createdAt: Date;
+}
+
+export interface MatchBreakdown {
+  cleanliness: number; // 25% weight
+  sleepSchedule: number; // 20% weight
+  foodHabits: number; // 15% weight
+  smokingDrinking: number; // 15% weight
+  noiseTolerance: number; // 10% weight
+  guests: number; // 10% weight
+  personality: number; // 5% weight
+  reasons: string[]; // Why they match
+  warnings: string[]; // Potential conflicts
+}
+
+// Legacy interface for backward compatibility
 export interface RoommateProfile {
   id: string;
   name: string;

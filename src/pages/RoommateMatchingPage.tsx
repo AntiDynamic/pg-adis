@@ -2,384 +2,499 @@ import { useState } from 'react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
-import { students, universities, Student } from '../data/mockData';
-import {
-  findCompatibleRoommates,
-  getCompatibilityLevel,
-  CompatibilityResult,
-} from '../utils/helpers';
+import ProfileBuilder from '../components/ProfileBuilder';
+import { UserProfile, UserPreferences, MatchResult } from '../types';
+import { findMatches } from '../utils/matchingAlgorithm';
+import { generateMatchInsights } from '../utils/geminiApi';
+import { SparklesIcon, LocationIcon } from '../components/ui/Icons';
+import { mockUsers, getUsersByCity, getUsersByArea } from '../data/mockUsers';
 
 /**
- * ROOMMATE MATCHING PAGE
+ * ROOMMATE MATCHING PAGE - V2 with Location-First Matching
  * 
- * Logic-based compatibility matching:
- * - Budget overlap
- * - Sleep schedule compatibility
- * - Cleanliness standards
- * - Food habits
- * - Lifestyle preferences (smoking, drinking)
- * - Study hours
- * 
- * Score threshold: 60% minimum for matches
+ * Flow:
+ * 1. User builds profile
+ * 2. Filter by city/area FIRST (location matters most!)
+ * 3. Then apply weighted compatibility matching
+ * 4. Show matches with AI-enhanced insights
  */
 
 export default function RoommateMatchingPage() {
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
-  const [matches, setMatches] = useState<
-    Array<{ student: Student; compatibility: CompatibilityResult }>
-  >([]);
+  const [currentUser, setCurrentUser] = useState<{
+    profile: UserProfile;
+    preferences: UserPreferences;
+  } | null>(null);
+  const [matches, setMatches] = useState<MatchResult[]>([]);
+  const [showProfileBuilder, setShowProfileBuilder] = useState(true);
+  const [aiInsights, setAiInsights] = useState<{ [key: string]: string }>({});
+  const [loadingInsights, setLoadingInsights] = useState<{ [key: string]: boolean }>({});
+  const [locationStats, setLocationStats] = useState<{
+    totalInCity: number;
+    totalInArea: number;
+    matchedCount: number;
+  } | null>(null);
 
-  // For demo, allow user to select themselves from mock students
-  const handleSelectProfile = (student: Student) => {
-    setSelectedStudent(student);
-    const compatibleMatches = findCompatibleRoommates(student, students, 60);
-    setMatches(compatibleMatches);
+  // Handle profile completion
+  const handleProfileComplete = (profile: UserProfile, preferences: UserPreferences) => {
+    const user = { profile, preferences };
+    setCurrentUser(user);
+    setShowProfileBuilder(false);
+
+    // STEP 1: Filter by location first
+    const cityUsers = getUsersByCity(profile.city);
+    
+    // Get users in preferred areas
+    const areaUsers = preferences.preferredAreas.flatMap((area) =>
+      getUsersByArea(profile.city, area)
+    );
+    
+    // Remove duplicates
+    const uniqueAreaUsers = Array.from(
+      new Map(areaUsers.map((u) => [u.profile.id, u])).values()
+    );
+
+    // STEP 2: Apply compatibility matching to location-filtered users
+    const allCandidates = uniqueAreaUsers.length > 0 ? uniqueAreaUsers : cityUsers;
+    const foundMatches = findMatches(user, allCandidates, 60);
+    
+    setMatches(foundMatches);
+    setLocationStats({
+      totalInCity: cityUsers.length,
+      totalInArea: uniqueAreaUsers.length,
+      matchedCount: foundMatches.length,
+    });
+
+    // STEP 3: Generate AI insights for top 5 matches
+    foundMatches.slice(0, 5).forEach((match) => {
+      generateAIInsight(match);
+    });
+  };
+
+  // Generate AI insights for a match
+  const generateAIInsight = async (match: MatchResult) => {
+    if (!currentUser) return;
+
+    setLoadingInsights((prev) => ({ ...prev, [match.matchedUserId]: true }));
+
+    try {
+      const matchedUser = mockUsers.find(
+        (u) => u.profile.id === match.matchedUserId
+      );
+      if (!matchedUser) return;
+
+      const insight = await generateMatchInsights(
+        currentUser.profile.name,
+        matchedUser.profile.name,
+        match.matchScore,
+        match.breakdown.reasons,
+        match.breakdown.warnings
+      );
+
+      setAiInsights((prev) => ({ ...prev, [match.matchedUserId]: insight }));
+    } catch (error) {
+      console.error('Error generating AI insight:', error);
+    } finally {
+      setLoadingInsights((prev) => ({ ...prev, [match.matchedUserId]: false }));
+    }
+  };
+
+  const handleStartOver = () => {
+    setCurrentUser(null);
+    setMatches([]);
+    setShowProfileBuilder(true);
+    setAiInsights({});
+    setLocationStats(null);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <h1 className="text-3xl font-bold text-gray-900">Find Your Roommate</h1>
-          <p className="text-gray-600 mt-2">
-            Smart compatibility matching based on lifestyle, budget, and habits
-          </p>
-        </div>
-      </div>
+    <div className="min-h-screen bg-dark-900">
+      {/* Show Profile Builder */}
+      {showProfileBuilder && (
+        <ProfileBuilder onComplete={handleProfileComplete} />
+      )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {!selectedStudent ? (
-          // Profile Selection
-          <div className="max-w-3xl mx-auto">
-            <Card>
-              <div className="p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                  Select Your Profile (Demo)
-                </h2>
-                <p className="text-gray-600 mb-6">
-                  In production, you would create your own profile. For this demo,
-                  select from existing profiles:
-                </p>
-                <div className="space-y-3">
-                  {students.map((student) => (
-                    <div
-                      key={student.id}
-                      onClick={() => handleSelectProfile(student)}
-                      className="p-4 border border-gray-200 rounded-lg hover:border-blue-500 cursor-pointer transition-colors"
-                    >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-semibold text-gray-900">
-                            {student.name}
-                          </h3>
-                          <p className="text-sm text-gray-600 mt-1">
-                            {
-                              universities.find((u) => u.id === student.universityId)
-                                ?.name
-                            }
-                          </p>
-                          <div className="flex gap-2 mt-2 text-xs">
-                            <Badge variant="default">
-                              ₹{student.budgetMin.toLocaleString()} - ₹
-                              {student.budgetMax.toLocaleString()}
-                            </Badge>
-                            <Badge variant="default">{student.foodHabit}</Badge>
-                            <Badge variant="default">
-                              Cleanliness: {student.cleanliness}/5
-                            </Badge>
-                          </div>
-                        </div>
-                        <Button size="sm">Select</Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </Card>
-          </div>
-        ) : (
-          // Matches Display
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left - Your Profile */}
-            <div className="lg:col-span-1">
-              <YourProfileCard
-                student={selectedStudent}
-                onChangeProfile={() => {
-                  setSelectedStudent(null);
-                  setMatches([]);
-                }}
-              />
-            </div>
-
-            {/* Right - Matches */}
-            <div className="lg:col-span-2">
-              <Card>
-                <div className="p-4 border-b border-gray-200 bg-gray-50">
-                  <h2 className="text-xl font-semibold text-gray-900">
-                    Your Matches ({matches.length})
-                  </h2>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Showing roommates with 60%+ compatibility
+      {/* Show Matches */}
+      {!showProfileBuilder && currentUser && (
+        <>
+          {/* Header */}
+          <div className="border-b border-gray-800 bg-dark-900/95 backdrop-blur-xl sticky top-0 z-40">
+            <div className="container-custom py-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h1 className="text-3xl font-bold mb-2">Your Roommate Matches</h1>
+                  <p className="text-gray-400">
+                    Found {matches.length} compatible roommates in your area
                   </p>
                 </div>
-                <div className="divide-y divide-gray-200">
-                  {matches.length > 0 ? (
-                    matches.map(({ student, compatibility }) => (
-                      <MatchCard
-                        key={student.id}
-                        student={student}
-                        compatibility={compatibility}
-                      />
-                    ))
-                  ) : (
-                    <div className="p-12 text-center text-gray-500">
-                      <p className="text-lg mb-2">No compatible matches found</p>
-                      <p className="text-sm">
-                        Try adjusting your preferences or check back later
-                      </p>
+                <Button variant="outline" onClick={handleStartOver}>
+                  Edit Profile
+                </Button>
+              </div>
+
+              {/* Location Stats */}
+              {locationStats && (
+                <div className="grid grid-cols-3 gap-4">
+                  <Card className="p-4 bg-surface-elevated">
+                    <div className="flex items-center gap-3">
+                      <LocationIcon className="w-5 h-5 text-trust-400" />
+                      <div>
+                        <div className="text-2xl font-bold text-gray-100">
+                          {locationStats.totalInCity}
+                        </div>
+                        <div className="text-xs text-gray-400">Users in {currentUser.profile.city}</div>
+                      </div>
                     </div>
-                  )}
+                  </Card>
+                  <Card className="p-4 bg-surface-elevated">
+                    <div className="flex items-center gap-3">
+                      <LocationIcon className="w-5 h-5 text-purple-400" />
+                      <div>
+                        <div className="text-2xl font-bold text-gray-100">
+                          {locationStats.totalInArea}
+                        </div>
+                        <div className="text-xs text-gray-400">In your preferred areas</div>
+                      </div>
+                    </div>
+                  </Card>
+                  <Card className="p-4 bg-trust-500/10 border-trust-500/20">
+                    <div className="flex items-center gap-3">
+                      <SparklesIcon className="w-5 h-5 text-trust-400" />
+                      <div>
+                        <div className="text-2xl font-bold text-trust-400">
+                          {locationStats.matchedCount}
+                        </div>
+                        <div className="text-xs text-trust-300">Compatible Matches</div>
+                      </div>
+                    </div>
+                  </Card>
                 </div>
-              </Card>
+              )}
             </div>
           </div>
-        )}
-      </div>
+
+          {/* Main Content */}
+          <div className="container-custom section-padding">
+            <div className="grid lg:grid-cols-3 gap-6">
+              {/* Your Profile Summary */}
+              <div className="lg:col-span-1">
+                <UserProfileCard profile={currentUser.profile} preferences={currentUser.preferences} />
+              </div>
+
+              {/* Matches List */}
+              <div className="lg:col-span-2 space-y-6">
+                {matches.length > 0 ? (
+                  matches.map((match) => {
+                    const matchedUser = mockUsers.find(
+                      (u) => u.profile.id === match.matchedUserId
+                    );
+                    if (!matchedUser) return null;
+
+                    return (
+                      <MatchCardV2
+                        key={match.matchedUserId}
+                        match={match}
+                        matchedUser={matchedUser}
+                        aiInsight={aiInsights[match.matchedUserId]}
+                        loadingInsight={loadingInsights[match.matchedUserId]}
+                      />
+                    );
+                  })
+                ) : (
+                  <Card className="p-12 text-center">
+                    <div className="w-16 h-16 bg-surface-elevated rounded-2xl flex items-center justify-center mx-auto mb-4">
+                      <SparklesIcon className="w-8 h-8 text-gray-600" />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-300 mb-2">
+                      No matches found in your area
+                    </h3>
+                    <p className="text-gray-400 mb-6 max-w-md mx-auto">
+                      {locationStats && locationStats.totalInCity > 0
+                        ? `We found ${locationStats.totalInCity} users in ${currentUser?.profile.city}, but none match your preferences yet. Try adjusting your budget or area preferences.`
+                        : 'Be the first in your city! Share PGLife with friends to grow the community.'}
+                    </p>
+                    <Button variant="primary" onClick={handleStartOver}>
+                      Adjust Preferences
+                    </Button>
+                  </Card>
+                )}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
 
-// Your Profile Card
-interface YourProfileCardProps {
-  student: Student;
-  onChangeProfile: () => void;
+// User Profile Card Component
+interface UserProfileCardProps {
+  profile: UserProfile;
+  preferences: UserPreferences;
 }
 
-function YourProfileCard({ student, onChangeProfile }: YourProfileCardProps) {
-  const university = universities.find((u) => u.id === student.universityId);
-
+function UserProfileCard({ profile, preferences }: UserProfileCardProps) {
   return (
-    <Card className="sticky top-6">
-      <div className="p-4 border-b border-gray-200 bg-blue-50">
-        <h3 className="font-semibold text-gray-900">Your Profile</h3>
+    <Card className="sticky top-24">
+      <div className="p-4 border-b border-gray-800 bg-trust-500/5">
+        <h3 className="font-semibold text-trust-400">Your Profile</h3>
       </div>
-      <div className="p-4 space-y-4">
+      <div className="p-6 space-y-4">
         <div>
-          <h4 className="font-semibold text-lg text-gray-900">{student.name}</h4>
-          <p className="text-sm text-gray-600">{university?.name}</p>
+          <div className="w-16 h-16 bg-gradient-to-br from-trust-500 to-emerald-600 rounded-2xl flex items-center justify-center text-white font-bold text-2xl mb-3">
+            {profile.name.charAt(0)}
+          </div>
+          <h4 className="font-bold text-xl text-gray-100">{profile.name}</h4>
+          <p className="text-sm text-gray-400">
+            {profile.age} • {profile.city}
+          </p>
+          {profile.college && (
+            <p className="text-sm text-gray-400 mt-1">{profile.college}</p>
+          )}
+          {profile.company && (
+            <p className="text-sm text-gray-400 mt-1">{profile.company}</p>
+          )}
         </div>
 
-        <div className="space-y-2 text-sm">
+        <div className="pt-4 border-t border-gray-800 space-y-3 text-sm">
           <div>
-            <span className="font-medium text-gray-700">Budget:</span>
-            <p className="text-gray-600">
-              ₹{student.budgetMin.toLocaleString()} - ₹
-              {student.budgetMax.toLocaleString()}/month
+            <span className="text-gray-500">Budget:</span>
+            <p className="text-gray-200 font-medium">
+              ₹{preferences.budgetMin.toLocaleString()} - ₹
+              {preferences.budgetMax.toLocaleString()}
             </p>
           </div>
 
           <div>
-            <span className="font-medium text-gray-700">Sleep Schedule:</span>
-            <p className="text-gray-600">
-              {student.sleepSchedule === 1
-                ? '🌅 Very Early Bird'
-                : student.sleepSchedule === 2
-                ? '🌅 Early Bird'
-                : student.sleepSchedule === 3
-                ? '⏰ Normal'
-                : student.sleepSchedule === 4
-                ? '🌙 Night Owl'
-                : '🌙 Very Late Night'}
+            <span className="text-gray-500">Room Type:</span>
+            <p className="text-gray-200 font-medium capitalize">{preferences.roomSharing}</p>
+          </div>
+
+          <div>
+            <span className="text-gray-500">Cleanliness:</span>
+            <p className="text-gray-200 font-medium">
+              {'⭐'.repeat(preferences.cleanlinessLevel)} Level {preferences.cleanlinessLevel}
             </p>
           </div>
 
           <div>
-            <span className="font-medium text-gray-700">Cleanliness:</span>
-            <p className="text-gray-600">
-              {'⭐'.repeat(student.cleanliness)} ({student.cleanliness}/5)
+            <span className="text-gray-500">Schedule:</span>
+            <p className="text-gray-200 font-medium">
+              Sleep: {preferences.sleepTime} • Wake: {preferences.wakeTime}
             </p>
           </div>
 
           <div>
-            <span className="font-medium text-gray-700">Food Habit:</span>
-            <p className="text-gray-600">
-              {student.foodHabit === 'veg'
-                ? '🥗 Vegetarian'
-                : student.foodHabit === 'vegan'
-                ? '🌱 Vegan'
-                : '🍗 Non-Vegetarian'}
-            </p>
+            <span className="text-gray-500">Food:</span>
+            <p className="text-gray-200 font-medium capitalize">{preferences.foodPreference}</p>
           </div>
 
-          <div>
-            <span className="font-medium text-gray-700">Lifestyle:</span>
-            <div className="flex gap-2 mt-1">
-              <Badge variant={student.smoking ? 'premium' : 'default'}>
-                {student.smoking ? 'Smokes' : 'No Smoking'}
-              </Badge>
-              <Badge variant={student.drinking ? 'new' : 'default'}>
-                {student.drinking ? 'Drinks' : 'No Drinking'}
-              </Badge>
-            </div>
-          </div>
-
-          <div>
-            <span className="font-medium text-gray-700">Study Hours:</span>
-            <p className="text-gray-600">
-              {student.studyHours === 1
-                ? '📚 Light'
-                : student.studyHours === 2
-                ? '📚 Moderate'
-                : student.studyHours === 3
-                ? '📚 Regular'
-                : student.studyHours === 4
-                ? '📚 Intensive'
-                : '📚 Very Intensive'}
-            </p>
+          <div className="flex gap-2 pt-2">
+            <Badge variant={preferences.smoking === 'no' ? 'verified' : 'default'}>
+              {preferences.smoking === 'no' ? '🚭 Non-smoker' : '🚬 Smoker'}
+            </Badge>
+            <Badge variant={preferences.drinking === 'no' ? 'verified' : 'default'}>
+              {preferences.drinking === 'no' ? '🚫 No alcohol' : '🍺 Drinks'}
+            </Badge>
           </div>
         </div>
-
-        <Button onClick={onChangeProfile} variant="outline" className="w-full">
-          Change Profile
-        </Button>
       </div>
     </Card>
   );
 }
 
-// Match Card
-interface MatchCardProps {
-  student: Student;
-  compatibility: CompatibilityResult;
+// Enhanced Match Card Component
+interface MatchCardV2Props {
+  match: MatchResult;
+  matchedUser: { profile: UserProfile; preferences: UserPreferences };
+  aiInsight?: string;
+  loadingInsight?: boolean;
 }
 
-function MatchCard({ student, compatibility }: MatchCardProps) {
+function MatchCardV2({ match, matchedUser, aiInsight, loadingInsight }: MatchCardV2Props) {
   const [showDetails, setShowDetails] = useState(false);
-  const university = universities.find((u) => u.id === student.universityId);
-  const { label, color } = getCompatibilityLevel(compatibility.score);
+
+  const getScoreColor = (score: number) => {
+    if (score >= 85) return 'text-green-400';
+    if (score >= 70) return 'text-trust-400';
+    if (score >= 60) return 'text-yellow-400';
+    return 'text-orange-400';
+  };
+
+  const getScoreLabel = (score: number) => {
+    if (score >= 85) return 'Excellent Match';
+    if (score >= 70) return 'Great Match';
+    if (score >= 60) return 'Good Match';
+    return 'Moderate Match';
+  };
+
+  // Check if areas overlap
+  const hasCommonArea = matchedUser.preferences.preferredAreas.length > 0;
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-start mb-4">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900">{student.name}</h3>
-          <p className="text-sm text-gray-600">{university?.name}</p>
-        </div>
-        <div className="text-right">
-          <div className="text-3xl font-bold text-blue-600">
-            {compatibility.score}%
+    <Card hoverable className="overflow-hidden">
+      {/* Header with Score */}
+      <div className="p-6 border-b border-gray-800 bg-gradient-to-r from-trust-500/5 to-emerald-500/5">
+        <div className="flex items-start justify-between">
+          <div className="flex items-start gap-4 flex-1">
+            <div className="w-16 h-16 bg-gradient-to-br from-trust-500 to-emerald-600 rounded-2xl flex items-center justify-center text-white font-bold text-2xl flex-shrink-0">
+              {matchedUser.profile.name.charAt(0)}
+            </div>
+            <div className="flex-1">
+              <h3 className="text-2xl font-bold text-gray-100 mb-1">
+                {matchedUser.profile.name}
+              </h3>
+              <div className="flex flex-wrap items-center gap-3 text-sm">
+                <span className="text-gray-400">
+                  {matchedUser.profile.age} • {matchedUser.profile.gender}
+                </span>
+                {matchedUser.profile.college && (
+                  <Badge variant="default" className="text-xs">
+                    🎓 {matchedUser.profile.college}
+                  </Badge>
+                )}
+                {matchedUser.profile.company && (
+                  <Badge variant="default" className="text-xs">
+                    💼 {matchedUser.profile.company}
+                  </Badge>
+                )}
+              </div>
+              {hasCommonArea && (
+                <div className="flex items-center gap-2 mt-2 text-sm text-purple-400">
+                  <LocationIcon className="w-4 h-4" />
+                  <span>Looking in: {matchedUser.preferences.preferredAreas.slice(0, 2).join(', ')}</span>
+                </div>
+              )}
+            </div>
           </div>
-          <div className={`text-sm font-medium ${color}`}>{label}</div>
+          
+          <div className="text-right flex-shrink-0">
+            <div className={`text-4xl font-bold ${getScoreColor(match.matchScore)}`}>
+              {match.matchScore}%
+            </div>
+            <div className="text-sm font-medium text-trust-400">
+              {getScoreLabel(match.matchScore)}
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Quick Info */}
-      <div className="grid grid-cols-2 gap-3 mb-4 text-sm">
+      {/* Match Breakdown */}
+      <div className="p-6 space-y-6">
+        {/* Why They Match */}
         <div>
-          <span className="text-gray-600">Budget:</span>
-          <p className="font-medium">
-            ₹{student.budgetMin.toLocaleString()} - ₹
-            {student.budgetMax.toLocaleString()}
-          </p>
-        </div>
-        <div>
-          <span className="text-gray-600">Food:</span>
-          <p className="font-medium">{student.foodHabit}</p>
-        </div>
-        <div>
-          <span className="text-gray-600">Cleanliness:</span>
-          <p className="font-medium">{'⭐'.repeat(student.cleanliness)}</p>
-        </div>
-        <div>
-          <span className="text-gray-600">Study:</span>
-          <p className="font-medium">{student.studyHours}/5 intensity</p>
-        </div>
-      </div>
-
-      {/* Compatibility Explanation */}
-      <div className="bg-gray-50 rounded-lg p-4 mb-4">
-        <h4 className="font-medium text-gray-900 mb-2">Why this match?</h4>
-        <ul className="space-y-1 text-sm">
-          {compatibility.explanation.slice(0, showDetails ? undefined : 3).map(
-            (exp, idx) => (
-              <li
-                key={idx}
-                className={
-                  exp.startsWith('✓')
-                    ? 'text-green-600'
-                    : exp.startsWith('✗')
-                    ? 'text-red-600'
-                    : 'text-yellow-600'
-                }
-              >
-                {exp}
-              </li>
-            )
-          )}
-        </ul>
-        {compatibility.explanation.length > 3 && (
-          <button
-            onClick={() => setShowDetails(!showDetails)}
-            className="text-blue-600 text-sm mt-2 hover:underline"
-          >
-            {showDetails ? 'Show less' : 'Show more details'}
-          </button>
-        )}
-      </div>
-
-      {/* Breakdown (if details shown) */}
-      {showDetails && (
-        <div className="mb-4">
-          <h4 className="font-medium text-gray-900 mb-2 text-sm">
-            Compatibility Breakdown:
+          <h4 className="text-sm font-bold text-gray-300 uppercase mb-3">
+            ✨ Why You Match
           </h4>
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <div>
-              <span className="text-gray-600">Budget Match:</span>
-              <span className="ml-2 font-medium">
-                {Math.round(compatibility.breakdown.budgetMatch)}%
-              </span>
-            </div>
-            <div>
-              <span className="text-gray-600">Sleep Schedule:</span>
-              <span className="ml-2 font-medium">
-                {Math.round(compatibility.breakdown.sleepScheduleMatch)}%
-              </span>
-            </div>
-            <div>
-              <span className="text-gray-600">Cleanliness:</span>
-              <span className="ml-2 font-medium">
-                {Math.round(compatibility.breakdown.cleanlinessMatch)}%
-              </span>
-            </div>
-            <div>
-              <span className="text-gray-600">Food Habits:</span>
-              <span className="ml-2 font-medium">
-                {Math.round(compatibility.breakdown.foodHabitMatch)}%
-              </span>
-            </div>
-            <div>
-              <span className="text-gray-600">Lifestyle:</span>
-              <span className="ml-2 font-medium">
-                {Math.round(compatibility.breakdown.lifestyleMatch)}%
-              </span>
-            </div>
-            <div>
-              <span className="text-gray-600">Study Hours:</span>
-              <span className="ml-2 font-medium">
-                {Math.round(compatibility.breakdown.studyHoursMatch)}%
-              </span>
-            </div>
+          <div className="space-y-2">
+            {match.breakdown.reasons.map((reason, idx) => (
+              <div
+                key={idx}
+                className="flex items-start gap-2 text-sm text-gray-300 bg-trust-500/5 p-3 rounded-lg"
+              >
+                {reason}
+              </div>
+            ))}
           </div>
         </div>
-      )}
 
-      {/* Actions */}
-      <div className="flex gap-3">
-        <Button className="flex-1">Connect</Button>
-        <Button variant="outline">View Full Profile</Button>
+        {/* Warnings */}
+        {match.breakdown.warnings.length > 0 && (
+          <div>
+            <h4 className="text-sm font-bold text-yellow-400 uppercase mb-3">
+              ⚠️ Things to Discuss
+            </h4>
+            <div className="space-y-2">
+              {match.breakdown.warnings.map((warning, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-start gap-2 text-sm text-gray-300 bg-yellow-500/5 p-3 rounded-lg"
+                >
+                  {warning}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* AI Insight */}
+        {aiInsight && (
+          <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <SparklesIcon className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-sm font-bold text-purple-400 uppercase mb-2">
+                  AI Insight
+                </h4>
+                <p className="text-sm text-gray-300 leading-relaxed">{aiInsight}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {loadingInsight && (
+          <div className="bg-surface-elevated rounded-lg p-4 text-center">
+            <div className="animate-pulse text-gray-400 text-sm">
+              Generating AI insights...
+            </div>
+          </div>
+        )}
+
+        {/* Detailed Breakdown */}
+        <button
+          onClick={() => setShowDetails(!showDetails)}
+          className="text-trust-400 text-sm hover:text-trust-300 transition"
+        >
+          {showDetails ? '▲ Hide' : '▼ Show'} detailed compatibility breakdown
+        </button>
+
+        {showDetails && (
+          <div className="space-y-3 pt-4 border-t border-gray-800">
+            <ScoreBar label="Cleanliness Match" score={match.breakdown.cleanliness} weight={25} />
+            <ScoreBar label="Sleep Schedule" score={match.breakdown.sleepSchedule} weight={20} />
+            <ScoreBar label="Food Habits" score={match.breakdown.foodHabits} weight={15} />
+            <ScoreBar label="Smoking/Drinking" score={match.breakdown.smokingDrinking} weight={15} />
+            <ScoreBar label="Noise Tolerance" score={match.breakdown.noiseTolerance} weight={10} />
+            <ScoreBar label="Guests Frequency" score={match.breakdown.guests} weight={10} />
+            <ScoreBar label="Personality" score={match.breakdown.personality} weight={5} />
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="flex gap-3 pt-4">
+          <Button variant="primary" fullWidth>
+            Connect
+          </Button>
+          <Button variant="outline" fullWidth>
+            Save for Later
+          </Button>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+// Score Bar Component
+function ScoreBar({ label, score, weight }: { label: string; score: number; weight: number }) {
+  const getColor = (score: number) => {
+    if (score >= 80) return 'bg-green-500';
+    if (score >= 60) return 'bg-trust-500';
+    if (score >= 40) return 'bg-yellow-500';
+    return 'bg-orange-500';
+  };
+
+  return (
+    <div>
+      <div className="flex justify-between text-sm mb-2">
+        <span className="text-gray-300">
+          {label} <span className="text-gray-500 text-xs">({weight}% weight)</span>
+        </span>
+        <span className="text-gray-400 font-medium">{score}%</span>
+      </div>
+      <div className="w-full bg-surface-elevated rounded-full h-2">
+        <div
+          className={`h-2 rounded-full ${getColor(score)} transition-all`}
+          style={{ width: `${score}%` }}
+        />
       </div>
     </div>
   );

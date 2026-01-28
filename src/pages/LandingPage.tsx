@@ -169,18 +169,27 @@ export const LandingPage: React.FC = () => {
               </div>
             </Card>
 
-            {/* Feature 2 */}
-            <Card hoverable elevated className="text-center p-8">
+            {/* Feature 2 - ENHANCED */}
+            <Card hoverable elevated className="text-center p-8 border-trust-500/20 bg-gradient-to-b from-trust-500/5 to-transparent">
+              <Badge variant="new" className="mb-4">NEW ✨</Badge>
               <div className="w-16 h-16 bg-trust-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6 verified-glow">
                 <UsersIcon className="w-8 h-8 text-trust-400" />
               </div>
               <h3 className="text-xl font-bold mb-3">Smart Roommate Matching</h3>
               <p className="text-gray-400 leading-relaxed">
-                AI-powered compatibility matching based on lifestyle, habits, and preferences. Find your perfect match.
+                AI-powered compatibility based on REAL factors: cleanliness, sleep schedule, food habits. No more bad matches!
               </p>
-              <div className="mt-6 flex items-center justify-center gap-2 text-sm text-trust-400">
+              <div className="mt-6 flex items-center justify-center gap-2 text-sm text-trust-400 mb-4">
                 <CheckIcon className="w-4 h-4" />
-                <span>95% compatibility rate</span>
+                <span>Weighted 7-factor algorithm</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <Link to="/roommate-matching">
+                  <Button variant="primary" size="sm" fullWidth>Start Matching</Button>
+                </Link>
+                <Link to="/browse-roommates">
+                  <Button variant="outline" size="sm" fullWidth>Browse All</Button>
+                </Link>
               </div>
             </Card>
 
