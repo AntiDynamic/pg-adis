@@ -1,0 +1,51 @@
+<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background - outdoor -->
+  <defs>
+    <linearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#87ceeb;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e0f6ff;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#skyGradient)"/>
+  
+  <!-- Ground -->
+  <rect y="200" width="400" height="100" fill="#90ee90"/>
+  
+  <!-- Building -->
+  <rect x="50" y="80" width="300" height="150" fill="#daa520" stroke="#333" stroke-width="2"/>
+  
+  <!-- Rooms/Windows -->
+  <g stroke="#333" stroke-width="1">
+    <!-- Row 1 -->
+    <rect x="70" y="100" width="40" height="40" fill="#87ceeb"/>
+    <rect x="120" y="100" width="40" height="40" fill="#87ceeb"/>
+    <rect x="170" y="100" width="40" height="40" fill="#87ceeb"/>
+    <rect x="220" y="100" width="40" height="40" fill="#87ceeb"/>
+    <rect x="270" y="100" width="40" height="40" fill="#87ceeb"/>
+    
+    <!-- Row 2 -->
+    <rect x="70" y="155" width="40" height="40" fill="#87ceeb"/>
+    <rect x="120" y="155" width="40" height="40" fill="#87ceeb"/>
+    <rect x="170" y="155" width="40" height="40" fill="#87ceeb"/>
+    <rect x="220" y="155" width="40" height="40" fill="#87ceeb"/>
+    <rect x="270" y="155" width="40" height="40" fill="#87ceeb"/>
+  </g>
+  
+  <!-- Door -->
+  <rect x="185" y="210" width="30" height="50" fill="#8b6f47" stroke="#333" stroke-width="2"/>
+  <circle cx="212" cy="235" r="2" fill="#ffd700"/>
+  
+  <!-- Flag pole -->
+  <line x1="340" y1="60" x2="340" y2="100" stroke="#333" stroke-width="2"/>
+  <polygon points="340,60 350,70 340,80" fill="#ff6347"/>
+  
+  <!-- Clouds -->
+  <ellipse cx="100" cy="30" rx="30" ry="20" fill="#fff" opacity="0.8"/>
+  <ellipse cx="130" cy="35" rx="25" ry="18" fill="#fff" opacity="0.8"/>
+  
+  <ellipse cx="300" cy="50" rx="35" ry="22" fill="#fff" opacity="0.8"/>
+  <ellipse cx="340" cy="55" rx="28" ry="20" fill="#fff" opacity="0.8"/>
+  
+  <!-- Text -->
+  <text x="200" y="295" font-size="16" font-weight="bold" text-anchor="middle" fill="#333">PG Building Exterior</text>
+</svg>
