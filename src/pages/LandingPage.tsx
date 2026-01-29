@@ -1,9 +1,17 @@
 import React, { useState } from 'react';
+<<<<<<< HEAD
 import { Link, useNavigate } from 'react-router-dom';
+=======
+import { Link } from 'react-router-dom';
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Badge } from '../components/ui/Badge';
 import { Card } from '../components/ui/Card';
+<<<<<<< HEAD
+=======
+import { Rating } from '../components/ui/Rating';
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d
 import { 
   VerifiedIcon, 
   SearchIcon, 
@@ -27,7 +35,10 @@ import {
 
 export const LandingPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
+<<<<<<< HEAD
   const navigate = useNavigate();
+=======
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d
 
   return (
     <div className="min-h-screen bg-dark-900">
@@ -46,6 +57,7 @@ export const LandingPage: React.FC = () => {
               <Link to="/pg-listing" className="text-gray-300 hover:text-white transition">Find PG</Link>
               <Link to="/roommate-matching" className="text-gray-300 hover:text-white transition">Match Roommates</Link>
               <Link to="/mess-discovery" className="text-gray-300 hover:text-white transition">Discover Food</Link>
+<<<<<<< HEAD
               <Link to="/expenses" className="text-gray-300 hover:text-white transition">Expenses</Link>
             </div>
             
@@ -63,6 +75,13 @@ export const LandingPage: React.FC = () => {
                 <Button variant="outline" size="sm">Sign In</Button>
               </Link>
               <Link to="/dashboard">
+=======
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" size="sm">Sign In</Button>
+              <Link to="/pg-listing">
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d
                 <Button variant="primary" size="sm">Get Started</Button>
               </Link>
             </div>
@@ -223,6 +242,59 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
+<<<<<<< HEAD
+=======
+      {/* Social Proof - Testimonials */}
+      <section className="section-padding bg-gradient-to-b from-dark-900 to-dark-800">
+        <div className="container-custom">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              What Students Say
+            </h2>
+            <p className="text-gray-400">Real reviews from real students</p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              {
+                name: "Priya Sharma",
+                role: "Engineering Student, Mumbai",
+                rating: 5,
+                text: "Found my perfect PG in just 2 days! The verification process gave me confidence, and my roommate match has been amazing."
+              },
+              {
+                name: "Rahul Kumar",
+                role: "MBA Student, Bangalore",
+                rating: 5,
+                text: "The mess discovery feature is a game-changer. No more experimenting with random places. Quality food ratings are spot-on!"
+              },
+              {
+                name: "Sneha Patel",
+                role: "Medical Student, Pune",
+                rating: 5,
+                text: "Moving to a new city was stressful, but PGLife made it so easy. The area safety info and verified listings are incredibly helpful."
+              }
+            ].map((testimonial, idx) => (
+              <Card key={idx} className="p-6">
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-trust-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold">
+                    {testimonial.name[0]}
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-semibold text-gray-100">{testimonial.name}</div>
+                    <div className="text-sm text-gray-400">{testimonial.role}</div>
+                  </div>
+                  <VerifiedIcon className="w-5 h-5 text-trust-400" />
+                </div>
+                <Rating rating={testimonial.rating} size="sm" showValue={false} className="mb-3" />
+                <p className="text-gray-300 leading-relaxed">{testimonial.text}</p>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d
       {/* Final CTA */}
       <section className="section-padding">
         <div className="container-custom">

@@ -374,6 +374,7 @@ export const DashboardPage: React.FC = () => {
                 </Button>
               </div>
             </Card>
+<<<<<<< HEAD
 
             {/* PG Owner Section */}
             <Card className="p-6 bg-gradient-to-br from-trust-500/10 to-emerald-500/10 border-trust-500/30">
@@ -395,6 +396,8 @@ export const DashboardPage: React.FC = () => {
                 Owner Dashboard
               </Button>
             </Card>
+=======
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d
           </div>
         </div>
       </div>

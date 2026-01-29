@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
+<<<<<<< HEAD
 import MessMap from '../components/MessMap';
+=======
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
@@ -244,7 +247,11 @@ const MessCard: React.FC<{ mess: MessListing }> = ({ mess }) => {
   );
 };
 
+<<<<<<< HEAD
 export const MessDiscoveryPage: React.FC<{ showMessMap: boolean, setShowMessMap: (v: boolean) => void }> = ({ showMessMap, setShowMessMap }) => {
+=======
+export const MessDiscoveryPage: React.FC = () => {
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('all');
 
@@ -356,11 +363,16 @@ export const MessDiscoveryPage: React.FC<{ showMessMap: boolean, setShowMessMap:
             <p className="text-gray-400 mb-6 max-w-md mx-auto">
               We're constantly adding new verified messes. Check back soon or explore nearby areas.
             </p>
+<<<<<<< HEAD
             <Button variant="primary" onClick={() => setShowMessMap(true)}>
+=======
+            <Button variant="primary">
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d
               Explore Nearby Areas
             </Button>
           </Card>
         </div>
+<<<<<<< HEAD
 
         {/* MessMap only appears when Explore Nearby Areas is clicked */}
         {showMessMap && (
@@ -368,11 +380,29 @@ export const MessDiscoveryPage: React.FC<{ showMessMap: boolean, setShowMessMap:
             <MessMap trigger={showMessMap} />
           </div>
         )}
+=======
+      </div>
+
+      {/* Bottom CTA */}
+      <div className="border-t border-gray-800 bg-surface-elevated">
+        <div className="container-custom py-12">
+          <Card className="p-8 text-center bg-gradient-to-br from-trust-500/5 to-emerald-500/5 border-trust-500/10">
+            <h2 className="text-2xl font-bold mb-3">Own a mess?</h2>
+            <p className="text-gray-400 mb-6 max-w-xl mx-auto">
+              Get verified and reach thousands of students looking for quality, affordable mess food.
+            </p>
+            <Button variant="primary" size="lg">
+              List Your Mess
+            </Button>
+          </Card>
+        </div>
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d
       </div>
     </div>
   );
 };
 
+<<<<<<< HEAD
 
 // Add state for showing MessMap
 function MessDiscoveryPageWrapper() {
@@ -380,3 +410,6 @@ function MessDiscoveryPageWrapper() {
   return <MessDiscoveryPage showMessMap={showMessMap} setShowMessMap={setShowMessMap} />;
 }
 export default MessDiscoveryPageWrapper;
+=======
+export default MessDiscoveryPage;
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d

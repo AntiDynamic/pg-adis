@@ -788,7 +788,11 @@ function MatchCardV2({ match, matchedUser, aiInsight, loadingInsight, isConnecte
             </Button>
           )}
           <Button 
+<<<<<<< HEAD
             variant={isSaved ? 'primary' : 'outline'} 
+=======
+            variant={isSaved ? 'default' : 'outline'} 
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d
             fullWidth
             onClick={onSave}
           >

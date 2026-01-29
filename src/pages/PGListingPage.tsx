@@ -7,7 +7,10 @@ import { Rating } from '../components/ui/Rating';
 import { universities, pgs, University, PG } from '../data/mockData';
 import { filterPGsByUniversity, filterPGs, PGFilterOptions } from '../utils/helpers';
 import { pgMedia } from '../data/mockData';
+<<<<<<< HEAD
 import { VerifiedPGList } from '../components/VerifiedPGList';
+=======
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d
 
 /**
  * PG LISTING PAGE
@@ -98,6 +101,7 @@ export default function PGListingPage() {
         </div>
       </div>
 
+<<<<<<< HEAD
       {/* Verified PGs from Database */}
       {!selectedUniversity && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -109,6 +113,8 @@ export default function PGListingPage() {
         </div>
       )}
 
+=======
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Sidebar - Filters & Results */}
@@ -196,7 +202,11 @@ function FilterPanel({ filters, onApplyFilters, disabled }: FilterPanelProps) {
       <div className="p-4 space-y-4">
         {/* Max Rent */}
         <div>
+<<<<<<< HEAD
           <label className="block text-sm font-medium text-gray-900 mb-2">
+=======
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d
             Max Rent (₹/month)
           </label>
           <input
@@ -216,7 +226,11 @@ function FilterPanel({ filters, onApplyFilters, disabled }: FilterPanelProps) {
 
         {/* Min Rating */}
         <div>
+<<<<<<< HEAD
           <label className="block text-sm font-medium text-gray-900 mb-2">
+=======
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d
             Minimum Rating
           </label>
           <select
@@ -239,7 +253,11 @@ function FilterPanel({ filters, onApplyFilters, disabled }: FilterPanelProps) {
 
         {/* Gender */}
         <div>
+<<<<<<< HEAD
           <label className="block text-sm font-medium text-gray-900 mb-2">
+=======
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d
             Gender Preference
           </label>
           <select
@@ -275,7 +293,11 @@ function FilterPanel({ filters, onApplyFilters, disabled }: FilterPanelProps) {
             className="h-4 w-4 text-blue-600 rounded"
             disabled={disabled}
           />
+<<<<<<< HEAD
           <label htmlFor="verified" className="ml-2 text-sm text-gray-900">
+=======
+          <label htmlFor="verified" className="ml-2 text-sm text-gray-700">
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d
             Verified PGs only
           </label>
         </div>

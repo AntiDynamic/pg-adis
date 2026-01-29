@@ -240,6 +240,11 @@ export interface CardProps {
   className?: string;
 }
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d
 // ========== PG PROOF, REVIEWS & TRUST SYSTEM ==========
 
 export interface PGMedia {
@@ -460,6 +465,10 @@ export interface OwnerInteractionProps {
   onScheduleVisit: () => void;
 }
 
+<<<<<<< HEAD
+=======
+>>>>>>> 50b19ec (feat: Add PG card image carousel, verification, and trust system enhancements (Jan 2026))
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d
 // Ensure React is imported for type usage
 import React from 'react';
 

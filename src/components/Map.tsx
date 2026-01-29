@@ -18,7 +18,10 @@ L.Icon.Default.mergeOptions({
   shadowUrl: shadowUrl,
 });
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d
 interface MapProps {
   universities: University[];
   pgs?: PG[];
@@ -29,8 +32,11 @@ interface MapProps {
   zoom?: number;
 }
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d
 export default function Map({
   universities,
   pgs = [],
@@ -43,14 +49,20 @@ export default function Map({
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
+<<<<<<< HEAD
   // ...existing code...
+=======
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d
   
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredUniversities, setFilteredUniversities] = useState<University[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d
   // Filter universities based on search query
   useEffect(() => {
     if (searchQuery.trim()) {
@@ -110,6 +122,7 @@ export default function Map({
   // Update markers when universities or PGs change
   useEffect(() => {
     if (!mapInstanceRef.current) return;
+<<<<<<< HEAD
     const map = mapInstanceRef.current;
     // Clear existing markers
     markersRef.current.forEach((marker) => marker.remove());
@@ -117,6 +130,17 @@ export default function Map({
     // --- University/PG markers ---
     // Custom icons
     /* const universityIcon = L.divIcon({
+=======
+
+    const map = mapInstanceRef.current;
+
+    // Clear existing markers
+    markersRef.current.forEach((marker) => marker.remove());
+    markersRef.current = [];
+
+    // Custom icons
+    const universityIcon = L.divIcon({
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d
       className: 'custom-university-marker',
       html: `
         <div style="
@@ -136,7 +160,11 @@ export default function Map({
       `,
       iconSize: [32, 32],
       iconAnchor: [16, 16],
+<<<<<<< HEAD
     }); */
+=======
+    });
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d
 
     const selectedUniversityIcon = L.divIcon({
       className: 'custom-university-marker-selected',
@@ -161,6 +189,7 @@ export default function Map({
       iconAnchor: [18, 18],
     });
 
+<<<<<<< HEAD
     // Show only the selected university marker and all PGs/hostels around it
     if (selectedUniversityId) {
       const selected = universities.find(uni => uni.id === selectedUniversityId);
@@ -295,6 +324,77 @@ export default function Map({
     }
 
     // PG markers
+=======
+    // Only show selected university marker (don't show any if none selected)
+    const universitiesToShow = selectedUniversityId 
+      ? universities.filter(uni => uni.id === selectedUniversityId)
+      : [];
+
+    // Add university markers (only for selected university)
+    universitiesToShow.forEach((university) => {
+      const isSelected = university.id === selectedUniversityId;
+      const icon = isSelected ? selectedUniversityIcon : universityIcon;
+
+      const marker = L.marker([university.lat, university.lng], {
+        icon,
+        title: university.name,
+      });
+
+      // Create popup content
+      const popupContent = document.createElement('div');
+      popupContent.style.cssText = 'min-width: 200px; font-family: system-ui;';
+      popupContent.innerHTML = `
+        <div style="padding: 8px;">
+          <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 600; color: #1f2937;">
+            ${university.name}
+          </h3>
+          <p style="margin: 0 0 12px 0; font-size: 14px; color: #6b7280;">
+            📍 ${university.city}
+          </p>
+          <button 
+            id="find-pgs-${university.id}" 
+            style="
+              width: 100%;
+              padding: 8px 16px;
+              background-color: #3b82f6;
+              color: white;
+              border: none;
+              border-radius: 6px;
+              font-size: 14px;
+              font-weight: 500;
+              cursor: pointer;
+              transition: background-color 0.2s;
+            "
+            onmouseover="this.style.backgroundColor='#2563eb'"
+            onmouseout="this.style.backgroundColor='#3b82f6'"
+          >
+            Find PGs near this university
+          </button>
+        </div>
+      `;
+
+      marker.bindPopup(popupContent, {
+        maxWidth: 300,
+        className: 'custom-popup',
+      });
+
+      // Add click handler for the button
+      marker.on('popupopen', () => {
+        const button = document.getElementById(`find-pgs-${university.id}`);
+        if (button && onUniversityClick) {
+          button.onclick = () => {
+            onUniversityClick(university);
+            marker.closePopup();
+          };
+        }
+      });
+
+      marker.addTo(map);
+      markersRef.current.push(marker);
+    });
+
+    // Add PG markers with different colors based on gender
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d
     pgs.forEach((pg) => {
       // Different colors for different gender types
       const pgColors = {
@@ -302,6 +402,10 @@ export default function Map({
         female: '#EC4899',    // Pink
         unisex: '#10B981'     // Green
       };
+<<<<<<< HEAD
+=======
+
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d
       const pgIcon = L.divIcon({
         className: 'custom-pg-marker',
         html: `
@@ -331,11 +435,20 @@ export default function Map({
         iconAnchor: [16, 32],
         popupAnchor: [0, -32]
       });
+<<<<<<< HEAD
+=======
+
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d
       const marker = L.marker([pg.lat, pg.lng], {
         icon: pgIcon,
         title: pg.name,
       });
+<<<<<<< HEAD
       // Popup content for PG
+=======
+
+      // Create popup content for PG
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d
       const popupContent = document.createElement('div');
       popupContent.style.cssText = 'min-width: 220px; font-family: system-ui;';
       popupContent.innerHTML = `
@@ -387,17 +500,57 @@ export default function Map({
             </span>
           </div>
           <div style="font-size: 12px; color: #6b7280;">
+<<<<<<< HEAD
             ${pg.amenities?.slice(0, 3).join(' • ') ?? ''}
           </div>
         </div>
       `;
+=======
+            ${pg.amenities.slice(0, 3).join(' • ')}
+          </div>
+        </div>
+      `;
+
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d
       marker.bindPopup(popupContent, {
         maxWidth: 300,
         className: 'custom-popup',
       });
+<<<<<<< HEAD
       marker.addTo(map);
       markersRef.current.push(marker);
     });
+=======
+
+      if (onPGClick) {
+        marker.on('click', () => {
+          onPGClick(pg);
+        });
+      }
+
+      marker.addTo(map);
+      markersRef.current.push(marker);
+    });
+
+    // Adjust map bounds to show selected university and PGs
+    if (selectedUniversityId && markersRef.current.length > 0) {
+      const selectedUniversity = universities.find(
+        (u) => u.id === selectedUniversityId
+      );
+      if (selectedUniversity) {
+        // If there are PGs, fit bounds to show both university and PGs
+        if (pgs.length > 0) {
+          const group = L.featureGroup(markersRef.current);
+          map.fitBounds(group.getBounds(), { padding: [50, 50], maxZoom: 13 });
+        } else {
+          // Just zoom to the university
+          map.setView([selectedUniversity.lat, selectedUniversity.lng], 13, {
+            animate: true,
+          });
+        }
+      }
+    }
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d
   }, [universities, pgs, onUniversityClick, onPGClick, selectedUniversityId]);
 
   return (
@@ -416,6 +569,10 @@ export default function Map({
               className="pl-10 pr-4 py-3 w-full bg-white shadow-lg border-gray-200 text-base"
             />
           </div>
+<<<<<<< HEAD
+=======
+          
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d
           {/* Dropdown with university list */}
           {showDropdown && filteredUniversities.length > 0 && (
             <div className="absolute top-full mt-2 w-full bg-white rounded-lg shadow-xl border border-gray-200 max-h-96 overflow-y-auto z-[1001]">
@@ -440,6 +597,10 @@ export default function Map({
               ))}
             </div>
           )}
+<<<<<<< HEAD
+=======
+          
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d
           {/* No results message */}
           {showDropdown && searchQuery && filteredUniversities.length === 0 && (
             <div className="absolute top-full mt-2 w-full bg-white rounded-lg shadow-xl border border-gray-200 p-4 z-[1001]">
@@ -450,9 +611,13 @@ export default function Map({
           )}
         </div>
       </div>
+<<<<<<< HEAD
 
 
 
+=======
+      
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d
       <div ref={mapRef} className="w-full h-full rounded-lg shadow-lg" />
       <style>{`
         @keyframes pulse {

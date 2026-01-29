@@ -106,7 +106,11 @@ Write in a warm, conversational, yet insightful tone. Be realistic but encouragi
  */
 export async function getProfileImprovementTips(
   profileCompleteness: number,
+<<<<<<< HEAD
   _preferences: any
+=======
+  preferences: any
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d
 ): Promise<string[]> {
   if (profileCompleteness >= 90) {
     return ['Your profile looks great! Start exploring matches.'];

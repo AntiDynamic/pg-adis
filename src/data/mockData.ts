@@ -586,6 +586,7 @@ export const pgs: PG[] = [
     amenities: ['WiFi', 'Meals', 'AC', 'Security'],
     distance: 1.1,
   },
+<<<<<<< HEAD
   // Near SPPU Pune
   {
     id: 'pg-sppu-1',
@@ -769,6 +770,8 @@ export const pgs: PG[] = [
     amenities: ['WiFi', 'AC', 'Meals', 'Security', 'Laundry'],
     distance: 1.0,
   },
+=======
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d
   // Near PCU Pune
   {
     id: 'pg-pcu-1',
@@ -929,6 +932,7 @@ export const pgs: PG[] = [
     amenities: ['WiFi', 'Meals', 'AC', 'Security', 'Gym'],
     distance: 1.5,
   },
+<<<<<<< HEAD
   // Near VIIT Pune
   {
     id: 'pg-viit-1',
@@ -986,6 +990,8 @@ export const pgs: PG[] = [
     amenities: ['WiFi', 'AC', 'Meals', 'Security', 'Laundry'],
     distance: 0.8,
   },
+=======
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d
 ];
 
 // Mock student profiles for roommate matching

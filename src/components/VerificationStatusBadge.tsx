@@ -1,4 +1,8 @@
 import { VerificationStatus } from '../types';
+<<<<<<< HEAD
+=======
+import { Badge } from './ui/Badge';
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d
 
 interface VerificationStatusBadgeProps {
   status: VerificationStatus;

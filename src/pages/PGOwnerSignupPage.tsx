@@ -4,7 +4,11 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import PGProofUpload from '../components/PGProofUpload';
+<<<<<<< HEAD
 import { PGOwnerSignupData } from '../types';
+=======
+import { PGOwnerSignupData, RoomType } from '../types';
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d
 
 type SignupStep = 1 | 2 | 3;
 
@@ -48,6 +52,10 @@ export default function PGOwnerSignupPage() {
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+<<<<<<< HEAD
+=======
+  const [customRule, setCustomRule] = useState('');
+>>>>>>> d9bc5d3c1a2923fd1ec3b256229a32f9b8be8f9d
 
   const availableAmenities = [
     'WiFi', 'AC', 'Laundry', 'Geyser', 'Refrigerator', 
