@@ -6,6 +6,7 @@ import { Badge } from '../components/ui/Badge';
 import { Rating } from '../components/ui/Rating';
 import { universities, pgs, University, PG } from '../data/mockData';
 import { filterPGsByUniversity, filterPGs, PGFilterOptions } from '../utils/helpers';
+import { pgMedia } from '../data/mockData';
 
 /**
  * PG LISTING PAGE
@@ -287,6 +288,25 @@ interface PGListItemProps {
 }
 
 function PGListItem({ pg, isSelected, onClick }: PGListItemProps) {
+  // Get images for this PG
+  const images = pgMedia.filter(m => m.pgId === pg.id && m.type === 'photo').map(m => m.url);
+  const fallback = ['/images/single-room.svg'];
+  const imgArr = images.length > 0 ? images : fallback;
+  const [imgIdx, setImgIdx] = useState(0);
+  const [imgError, setImgError] = useState(false);
+  const hasCarousel = imgArr.length > 1;
+
+  const handlePrev = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setImgIdx((idx) => (idx === 0 ? imgArr.length - 1 : idx - 1));
+    setImgError(false);
+  };
+  const handleNext = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setImgIdx((idx) => (idx === imgArr.length - 1 ? 0 : idx + 1));
+    setImgError(false);
+  };
+
   return (
     <div
       onClick={onClick}
@@ -294,6 +314,45 @@ function PGListItem({ pg, isSelected, onClick }: PGListItemProps) {
         isSelected ? 'bg-blue-50 border-l-4 border-blue-500' : ''
       }`}
     >
+      {/* Room image section */}
+      <div className="relative mb-2">
+        <img
+          src={imgError ? fallback[0] : imgArr[imgIdx]}
+          alt="Room"
+          loading="lazy"
+          onError={() => setImgError(true)}
+          className="w-full h-32 object-cover rounded-xl bg-zinc-800"
+        />
+        {hasCarousel && (
+          <>
+            <button
+              className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white rounded-full p-1"
+              onClick={handlePrev}
+              aria-label="Previous image"
+              type="button"
+            >
+              ‹
+            </button>
+            <button
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white rounded-full p-1"
+              onClick={handleNext}
+              aria-label="Next image"
+              type="button"
+            >
+              ›
+            </button>
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+              {imgArr.map((_, i) => (
+                <span
+                  key={i}
+                  className={`w-2 h-2 rounded-full ${i === imgIdx ? 'bg-white' : 'bg-white/40'}`}
+                />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+      {/* ...existing info section... */}
       <div className="flex justify-between items-start mb-2">
         <h3 className="font-semibold text-gray-900">{pg.name}</h3>
         {pg.verified && (
@@ -302,7 +361,6 @@ function PGListItem({ pg, isSelected, onClick }: PGListItemProps) {
           </Badge>
         )}
       </div>
-      
       <div className="space-y-1 text-sm">
         <div className="flex items-center justify-between">
           <span className="font-semibold text-green-600">
@@ -313,9 +371,7 @@ function PGListItem({ pg, isSelected, onClick }: PGListItemProps) {
             <span className="ml-1 text-gray-600">{pg.rating}</span>
           </div>
         </div>
-        
         <p className="text-gray-600">📍 {pg.distance} km away</p>
-        
         <div className="flex items-center gap-2 mt-2">
           <Badge
             variant={

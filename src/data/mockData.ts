@@ -18,9 +18,11 @@ export interface PG {
   rent: number;
   rating: number;
   verified: boolean;
+  verificationStatus?: 'pending_verification' | 'verified' | 'rejected' | 'resubmission_required'; // Owner verification status
   gender: 'male' | 'female' | 'unisex';
   amenities: string[];
   distance: number; // Distance from university in km
+  ownerId?: string; // Added for owner tracking
 }
 
 export interface Student {
@@ -360,6 +362,8 @@ export const pgs: PG[] = [
     rent: 8500,
     rating: 4.2,
     verified: true,
+    verificationStatus: 'verified',
+    ownerId: 'owner_1',
     gender: 'male',
     amenities: ['WiFi', 'Meals', 'AC', 'Laundry'],
     distance: 0.8,
@@ -373,6 +377,8 @@ export const pgs: PG[] = [
     rent: 9500,
     rating: 4.5,
     verified: true,
+    verificationStatus: 'verified',
+    ownerId: 'owner_2',
     gender: 'female',
     amenities: ['WiFi', 'Meals', 'AC', 'Security', 'Gym'],
     distance: 1.2,
@@ -386,6 +392,8 @@ export const pgs: PG[] = [
     rent: 7000,
     rating: 3.8,
     verified: false,
+    verificationStatus: 'pending_verification',
+    ownerId: 'owner_3',
     gender: 'unisex',
     amenities: ['WiFi', 'Parking'],
     distance: 1.5,
@@ -808,3 +816,363 @@ export const students: Student[] = [
     studyHours: 2,
   },
 ];
+
+// ========== PG PROOF, REVIEWS & TRUST SYSTEM MOCK DATA ==========
+
+export interface PGMediaData {
+  id: string;
+  pgId: string;
+  type: 'photo' | 'video';
+  title: string;
+  description?: string;
+  url: string;
+  category: 'room' | 'washroom' | 'common-area' | 'food' | 'other';
+  uploadedBy: 'owner' | 'verified-admin';
+  verified: boolean;
+  verifiedAt?: string;
+  uploadedAt: string;
+}
+
+export interface StudentReviewData {
+  id: string;
+  pgId: string;
+  userId: string;
+  userName: string;
+  rating: 1 | 2 | 3 | 4 | 5;
+  title: string;
+  description: string;
+  stayDuration: {
+    months: number;
+    from: string;
+    to: string;
+  };
+  aspects?: {
+    cleanliness: number;
+    foodQuality: number;
+    ownerBehavior: number;
+    maintenance: number;
+  };
+  verified: boolean;
+  helpful: number;
+  unhelpful: number;
+  createdAt: string;
+}
+
+// Mock PG Media - Photos and Videos with Better Images
+export const pgMedia: PGMediaData[] = [
+  // PG 1 - Skyrise Apartments
+  {
+    id: 'media-1',
+    pgId: 'pg-1',
+    type: 'photo',
+    title: 'Single Bedroom - Spacious & Bright',
+    description: 'Well-lit single room with study desk, cupboard, and comfortable bed. Perfect for students. Taken on 2024-12-14',
+    url: '/images/single-room.svg',
+    category: 'room',
+    uploadedBy: 'owner',
+    verified: true,
+    verifiedAt: '2024-12-15',
+    uploadedAt: '2024-12-14',
+  },
+  {
+    id: 'media-2',
+    pgId: 'pg-1',
+    type: 'photo',
+    title: 'Modern Bathroom - Clean & Hygienic',
+    description: 'Attached bathroom with 24/7 hot water, geysers, and daily cleaning. Verified by admin on 2024-12-15',
+    url: '/images/bathroom.svg',
+    category: 'washroom',
+    uploadedBy: 'verified-admin',
+    verified: true,
+    verifiedAt: '2024-12-15',
+    uploadedAt: '2024-12-14',
+  },
+  {
+    id: 'media-3',
+    pgId: 'pg-1',
+    type: 'video',
+    title: '🎥 30-Second Room Walkthrough Video',
+    description: 'Quick video tour of the room - Shows bed, study area, cupboard, and natural lighting. Length: 45 seconds',
+    url: '/images/building-exterior.svg',
+    category: 'room',
+    uploadedBy: 'owner',
+    verified: true,
+    verifiedAt: '2024-12-15',
+    uploadedAt: '2024-12-13',
+  },
+  {
+    id: 'media-4',
+    pgId: 'pg-1',
+    type: 'photo',
+    title: 'Comfortable Common Lounge',
+    description: 'Spacious shared lounge with TV, sofa seating, and gaming area. Great for relaxation and socializing.',
+    url: '/images/lounge.svg',
+    category: 'common-area',
+    uploadedBy: 'owner',
+    verified: true,
+    verifiedAt: '2024-12-15',
+    uploadedAt: '2024-12-14',
+  },
+
+  // PG 2 - BombayBliss
+  {
+    id: 'media-5',
+    pgId: 'pg-2',
+    type: 'photo',
+    title: 'Double Sharing Bedroom - Cozy Setup',
+    description: 'Comfortable double-sharing room with two separate beds, individual lockers, and ventilated windows.',
+    url: '/images/double-sharing.svg',
+    category: 'room',
+    uploadedBy: 'owner',
+    verified: true,
+    verifiedAt: '2024-12-10',
+    uploadedAt: '2024-12-09',
+  },
+  {
+    id: 'media-6',
+    pgId: 'pg-2',
+    type: 'photo',
+    title: 'Kitchen & Mess - Hygienic Food Area',
+    description: 'Professional kitchen with trained cooks, daily menu variety, and strict hygiene standards. Verified by admin.',
+    url: '/images/kitchen.svg',
+    category: 'food',
+    uploadedBy: 'verified-admin',
+    verified: true,
+    verifiedAt: '2024-12-10',
+    uploadedAt: '2024-12-09',
+  },
+
+  // PG 3 - Garden Vista
+  {
+    id: 'media-7',
+    pgId: 'pg-3',
+    type: 'photo',
+    title: 'Triple Sharing Dorm - Spacious & Airy',
+    description: 'Large triple-sharing room with individual beds, study tables, lockers, and good cross-ventilation.',
+    url: '/images/triple-dorm.svg',
+    category: 'room',
+    uploadedBy: 'owner',
+    verified: true,
+    verifiedAt: '2024-12-08',
+    uploadedAt: '2024-12-07',
+  },
+];
+
+// Mock Student Reviews
+export const studentReviews: StudentReviewData[] = [
+  {
+    id: 'review-1',
+    pgId: 'pg-1',
+    userId: 'student-1',
+    userName: 'Rahul Kumar',
+    rating: 5,
+    title: 'Best PG in Mumbai! Highly recommended',
+    description: 'Stayed here for 8 months during my internship. The owner is extremely cooperative and the room is very clean. Food quality is consistently good. Perfect for students looking for a home away from home.',
+    stayDuration: {
+      months: 8,
+      from: '2023-06-01',
+      to: '2024-02-01',
+    },
+    aspects: {
+      cleanliness: 5,
+      foodQuality: 4,
+      ownerBehavior: 5,
+      maintenance: 5,
+    },
+    verified: true,
+    helpful: 24,
+    unhelpful: 2,
+    createdAt: '2024-02-15',
+  },
+  {
+    id: 'review-2',
+    pgId: 'pg-1',
+    userId: 'student-2',
+    userName: 'Priya Sharma',
+    rating: 4,
+    title: 'Good PG with excellent maintenance',
+    description: 'Lived here for 6 months. The room is spacious and well-maintained. Hot water is always available. The only thing is that the WiFi can be a bit slow during peak hours. Overall, a solid choice.',
+    stayDuration: {
+      months: 6,
+      from: '2023-10-01',
+      to: '2024-04-01',
+    },
+    aspects: {
+      cleanliness: 4,
+      foodQuality: 3,
+      ownerBehavior: 4,
+      maintenance: 4,
+    },
+    verified: true,
+    helpful: 18,
+    unhelpful: 1,
+    createdAt: '2024-04-20',
+  },
+  {
+    id: 'review-3',
+    pgId: 'pg-2',
+    userId: 'student-3',
+    userName: 'Arjun Patel',
+    rating: 3,
+    title: 'Average PG, decent amenities',
+    description: 'Stayed for 4 months. The room is okay but a bit crowded in the double-sharing configuration. Food is decent, nothing special. Owner is responsive but takes time for maintenance issues.',
+    stayDuration: {
+      months: 4,
+      from: '2024-01-01',
+      to: '2024-05-01',
+    },
+    aspects: {
+      cleanliness: 3,
+      foodQuality: 3,
+      ownerBehavior: 3,
+      maintenance: 2,
+    },
+    verified: true,
+    helpful: 12,
+    unhelpful: 5,
+    createdAt: '2024-05-10',
+  },
+  {
+    id: 'review-4',
+    pgId: 'pg-3',
+    userName: 'Sneha Reddy',
+    userId: 'student-4',
+    rating: 4,
+    title: 'Great value for budget',
+    description: 'Perfect for a student budget. The dorm setup is clean and the owner is very student-friendly. Location is great for accessing the university. Mess food could be better but overall good experience.',
+    stayDuration: {
+      months: 10,
+      from: '2023-08-01',
+      to: '2024-06-01',
+    },
+    aspects: {
+      cleanliness: 4,
+      foodQuality: 2,
+      ownerBehavior: 5,
+      maintenance: 3,
+    },
+    verified: true,
+    helpful: 31,
+    unhelpful: 3,
+    createdAt: '2024-06-15',
+  },
+  {
+    id: 'review-5',
+    pgId: 'pg-1',
+    userId: 'student-5',
+    userName: 'Amit Singh',
+    rating: 5,
+    title: 'Excellent experience, would come back!',
+    description: 'Lived here for 5 months during my placement. The rooms are spacious, owner is understanding, and the maintenance is impeccable. Hot water available 24/7. Highly recommended for working professionals too.',
+    stayDuration: {
+      months: 5,
+      from: '2024-02-01',
+      to: '2024-07-01',
+    },
+    aspects: {
+      cleanliness: 5,
+      foodQuality: 4,
+      ownerBehavior: 5,
+      maintenance: 5,
+    },
+    verified: true,
+    helpful: 27,
+    unhelpful: 1,
+    createdAt: '2024-07-22',
+  },
+];
+
+// Function to get reviews for a specific PG
+export function getPGReviews(pgId: string) {
+  return studentReviews.filter((review) => review.pgId === pgId);
+}
+
+// Function to calculate PG review summary
+export function getPGReviewSummary(pgId: string) {
+  const reviews = getPGReviews(pgId);
+  if (reviews.length === 0) {
+    return {
+      averageRating: 0,
+      totalReviews: 0,
+      ratingDistribution: { five: 0, four: 0, three: 0, two: 0, one: 0 },
+    };
+  }
+
+  const ratingDistribution = { five: 0, four: 0, three: 0, two: 0, one: 0 };
+  let totalRating = 0;
+
+  reviews.forEach((review) => {
+    totalRating += review.rating;
+    if (review.rating === 5) ratingDistribution.five++;
+    else if (review.rating === 4) ratingDistribution.four++;
+    else if (review.rating === 3) ratingDistribution.three++;
+    else if (review.rating === 2) ratingDistribution.two++;
+    else ratingDistribution.one++;
+  });
+
+  return {
+    averageRating: (totalRating / reviews.length).toFixed(1),
+    totalReviews: reviews.length,
+    ratingDistribution,
+  };
+}
+
+// Function to get media for a specific PG
+export function getPGMediaByPGId(pgId: string) {
+  return pgMedia.filter((media) => media.pgId === pgId);
+}
+
+// Function to calculate distance between coordinates
+export function calculateDistance(
+  lat1: number,
+  lng1: number,
+  lat2: number,
+  lng2: number
+): number {
+  const R = 6371; // Earth's radius in km
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+// ========== PG OWNER VERIFICATION UTILITIES ==========
+
+/**
+ * Filter only verified PGs for student dashboard and map
+ * Unverified/pending PGs should NOT appear in student searches
+ */
+export function getVerifiedPGs(): PG[] {
+  return pgs.filter(
+    (pg) => pg.verificationStatus === 'verified' || (pg.verified && !pg.verificationStatus)
+  );
+}
+
+/**
+ * Get PGs by owner ID (for owner dashboard)
+ */
+export function getPGsByOwner(ownerId: string): PG[] {
+  return pgs.filter((pg) => pg.ownerId === ownerId);
+}
+
+/**
+ * Check if user is within same city or nearby (< 50km) for interaction options
+ */
+export function isUserNearPG(
+  userLat: number,
+  userLng: number,
+  pgLat: number,
+  pgLng: number
+): { isNearby: boolean; distanceKm: number } {
+  const distance = calculateDistance(userLat, userLng, pgLat, pgLng);
+  return {
+    isNearby: distance < 50,
+    distanceKm: Math.round(distance * 10) / 10
+  };
+}

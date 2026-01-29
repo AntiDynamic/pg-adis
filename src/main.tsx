@@ -7,6 +7,7 @@ import PGListingPage from './pages/PGListingPage';
 import RoommateMatchingPage from './pages/RoommateMatchingPage';
 import MessDiscoveryPage from './pages/MessDiscoveryPage';
 import BrowseRoommatesPage from './pages/BrowseRoommatesPage';
+import PGOwnerSignupPage from './pages/PGOwnerSignupPage';
 import './styles/globals.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
@@ -19,6 +20,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route path="/roommate-matching" element={<RoommateMatchingPage />} />
         <Route path="/mess-discovery" element={<MessDiscoveryPage />} />
         <Route path="/browse-roommates" element={<BrowseRoommatesPage />} />
+        <Route path="/become-owner" element={<PGOwnerSignupPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

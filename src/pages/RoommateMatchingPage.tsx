@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
@@ -10,22 +11,25 @@ import { SparklesIcon, LocationIcon } from '../components/ui/Icons';
 import { mockUsers, getUsersByCity, getUsersByArea } from '../data/mockUsers';
 
 /**
- * ROOMMATE MATCHING PAGE - V2 with Location-First Matching
+ * ROOMMATE MATCHING PAGE - V3 with Persistent Profile Storage
  * 
  * Flow:
- * 1. User builds profile
- * 2. Filter by city/area FIRST (location matters most!)
- * 3. Then apply weighted compatibility matching
- * 4. Show matches with AI-enhanced insights
+ * 1. Check if user has saved profile in localStorage
+ * 2. If yes: Load profile and show matches automatically
+ * 3. If no: Show profile builder form
+ * 4. Profile persists across sessions until user clears it
  */
 
+const PROFILE_STORAGE_KEY = 'pglife_user_profile';
+
 export default function RoommateMatchingPage() {
+  const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState<{
     profile: UserProfile;
     preferences: UserPreferences;
   } | null>(null);
   const [matches, setMatches] = useState<MatchResult[]>([]);
-  const [showProfileBuilder, setShowProfileBuilder] = useState(true);
+  const [showProfileBuilder, setShowProfileBuilder] = useState(false);
   const [aiInsights, setAiInsights] = useState<{ [key: string]: string }>({});
   const [loadingInsights, setLoadingInsights] = useState<{ [key: string]: boolean }>({});
   const [locationStats, setLocationStats] = useState<{
@@ -33,29 +37,78 @@ export default function RoommateMatchingPage() {
     totalInArea: number;
     matchedCount: number;
   } | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Connection and messaging state
+  const [connectedUsers, setConnectedUsers] = useState<Set<string>>(new Set());
+  const [savedMatches, setSavedMatches] = useState<Set<string>>(new Set());
+  const [chatModal, setChatModal] = useState<{
+    isOpen: boolean;
+    user: { profile: UserProfile; preferences: UserPreferences } | null;
+  }>({ isOpen: false, user: null });
+  const [messages, setMessages] = useState<{ [userId: string]: Array<{ text: string; sender: 'me' | 'them'; time: Date }> }>({});
+  const [messageInput, setMessageInput] = useState('');
 
-  // Handle profile completion
-  const handleProfileComplete = (profile: UserProfile, preferences: UserPreferences) => {
-    const user = { profile, preferences };
-    setCurrentUser(user);
-    setShowProfileBuilder(false);
+  // Load saved profile on component mount
+  useEffect(() => {
+    const loadSavedProfile = () => {
+      try {
+        const savedData = localStorage.getItem(PROFILE_STORAGE_KEY);
+        console.log('Raw localStorage data:', savedData);
+        
+        if (savedData) {
+          const { profile, preferences } = JSON.parse(savedData);
+          console.log('Parsed profile:', profile);
+          console.log('Parsed preferences:', preferences);
+          
+          // Convert date strings back to Date objects
+          profile.createdAt = new Date(profile.createdAt);
+          preferences.moveInDate = new Date(preferences.moveInDate);
+          
+          const user = { profile, preferences };
+          setCurrentUser(user);
+          
+          // Auto-load matches
+          loadMatches(user);
+          setShowProfileBuilder(false);
+        } else {
+          console.log('No saved profile found in localStorage');
+          setShowProfileBuilder(true);
+        }
+      } catch (error) {
+        console.error('Error loading saved profile:', error);
+        setShowProfileBuilder(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-    // STEP 1: Filter by location first
-    const cityUsers = getUsersByCity(profile.city);
+    loadSavedProfile();
+  }, []);
+
+  // Helper function to load matches for a user
+  const loadMatches = (user: { profile: UserProfile; preferences: UserPreferences }) => {
+    console.log('Loading matches for user:', user.profile.name, 'City:', user.profile.city);
+    console.log('Preferred areas:', user.preferences.preferredAreas);
     
-    // Get users in preferred areas
-    const areaUsers = preferences.preferredAreas.flatMap((area) =>
-      getUsersByArea(profile.city, area)
+    const cityUsers = getUsersByCity(user.profile.city);
+    console.log('City users found:', cityUsers.length);
+    
+    const areaUsers = user.preferences.preferredAreas.flatMap((area) =>
+      getUsersByArea(user.profile.city, area)
     );
     
-    // Remove duplicates
     const uniqueAreaUsers = Array.from(
       new Map(areaUsers.map((u) => [u.profile.id, u])).values()
     );
+    console.log('Area users found:', uniqueAreaUsers.length);
 
-    // STEP 2: Apply compatibility matching to location-filtered users
     const allCandidates = uniqueAreaUsers.length > 0 ? uniqueAreaUsers : cityUsers;
+    console.log('All candidates:', allCandidates.length);
+    
     const foundMatches = findMatches(user, allCandidates, 60);
+    console.log('Matches found after filtering:', foundMatches.length);
     
     setMatches(foundMatches);
     setLocationStats({
@@ -64,15 +117,36 @@ export default function RoommateMatchingPage() {
       matchedCount: foundMatches.length,
     });
 
-    // STEP 3: Generate AI insights for top 5 matches
+    // Generate AI insights for top 5 matches
     foundMatches.slice(0, 5).forEach((match) => {
-      generateAIInsight(match);
+      generateAIInsight(match, user);
     });
   };
 
+  // Handle profile completion and save to localStorage
+  const handleProfileComplete = (profile: UserProfile, preferences: UserPreferences) => {
+    const user = { profile, preferences };
+    
+    // Save to localStorage
+    try {
+      localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(user));
+    } catch (error) {
+      console.error('Error saving profile:', error);
+    }
+    
+    setCurrentUser(user);
+    setShowProfileBuilder(false);
+    
+    // Load matches
+    loadMatches(user);
+  };
+
   // Generate AI insights for a match
-  const generateAIInsight = async (match: MatchResult) => {
-    if (!currentUser) return;
+  const generateAIInsight = async (
+    match: MatchResult, 
+    user: { profile: UserProfile; preferences: UserPreferences } = currentUser!
+  ) => {
+    if (!user) return;
 
     setLoadingInsights((prev) => ({ ...prev, [match.matchedUserId]: true }));
 
@@ -82,12 +156,15 @@ export default function RoommateMatchingPage() {
       );
       if (!matchedUser) return;
 
+      // Pass full user profiles for more personalized insights
       const insight = await generateMatchInsights(
-        currentUser.profile.name,
+        user.profile.name,
         matchedUser.profile.name,
         match.matchScore,
         match.breakdown.reasons,
-        match.breakdown.warnings
+        match.breakdown.warnings,
+        user, // Current user's full profile
+        matchedUser // Matched user's full profile
       );
 
       setAiInsights((prev) => ({ ...prev, [match.matchedUserId]: insight }));
@@ -98,26 +175,159 @@ export default function RoommateMatchingPage() {
     }
   };
 
-  const handleStartOver = () => {
-    setCurrentUser(null);
-    setMatches([]);
+  const handleEditProfile = () => {
     setShowProfileBuilder(true);
+    setMatches([]);
     setAiInsights({});
     setLocationStats(null);
   };
 
+  // Connect with a user
+  const handleConnect = (userId: string) => {
+    setConnectedUsers(prev => new Set([...prev, userId]));
+    // Show success message
+    alert('Connection request sent! You can now message them.');
+  };
+
+  // Save match for later
+  const handleSaveMatch = (userId: string) => {
+    setSavedMatches(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(userId)) {
+        newSet.delete(userId);
+      } else {
+        newSet.add(userId);
+      }
+      return newSet;
+    });
+  };
+
+  // Open chat modal
+  const handleOpenChat = (user: { profile: UserProfile; preferences: UserPreferences }) => {
+    // Auto-connect if not already connected
+    if (!connectedUsers.has(user.profile.id)) {
+      setConnectedUsers(prev => new Set([...prev, user.profile.id]));
+    }
+    setChatModal({ isOpen: true, user });
+  };
+
+  // Send message
+  const handleSendMessage = () => {
+    if (!messageInput.trim() || !chatModal.user) return;
+    
+    const userId = chatModal.user.profile.id;
+    const newMessage = {
+      text: messageInput,
+      sender: 'me' as const,
+      time: new Date()
+    };
+    
+    setMessages(prev => ({
+      ...prev,
+      [userId]: [...(prev[userId] || []), newMessage]
+    }));
+    
+    setMessageInput('');
+    
+    // Simulate response after 2 seconds
+    setTimeout(() => {
+      const responseMessage = {
+        text: "Thanks for reaching out! I'm interested in discussing this roommate opportunity. When would be a good time to chat?",
+        sender: 'them' as const,
+        time: new Date()
+      };
+      setMessages(prev => ({
+        ...prev,
+        [userId]: [...(prev[userId] || []), responseMessage]
+      }));
+    }, 2000);
+  };
+
+  const handleClearProfile = () => {
+    if (confirm('Are you sure you want to clear your profile? You will need to fill it again.')) {
+      localStorage.removeItem(PROFILE_STORAGE_KEY);
+      setCurrentUser(null);
+      setMatches([]);
+      setShowProfileBuilder(true);
+      setAiInsights({});
+      setLocationStats(null);
+    }
+  };
+
+  const handleSaveProfile = () => {
+    setIsSaving(true);
+    // Profile is already saved in localStorage
+    setTimeout(() => {
+      setIsSaving(false);
+      navigate('/');
+    }, 500);
+  };
+
+  const handleBackToHome = () => {
+    navigate('/');
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-dark-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-trust-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-400">Loading your profile...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-dark-900">
+      {/* Top Navigation Bar */}
+      <div className="border-b border-gray-800 bg-dark-900/95 backdrop-blur-xl sticky top-0 z-50">
+        <div className="container-custom py-4">
+          <div className="flex items-center justify-between">
+            <Button 
+              variant="outline" 
+              onClick={handleBackToHome}
+              className="flex items-center gap-2"
+            >
+              <span>←</span> Back to Home
+            </Button>
+            <div className="flex gap-3">
+              {!showProfileBuilder && currentUser && (
+                <>
+                  <Button 
+                    variant="outline" 
+                    onClick={handleClearProfile}
+                  >
+                    Clear Profile
+                  </Button>
+                  <Button 
+                    variant="primary" 
+                    onClick={handleSaveProfile}
+                    disabled={isSaving}
+                  >
+                    {isSaving ? 'Exiting...' : 'Exit to Home'}
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Show Profile Builder */}
       {showProfileBuilder && (
-        <ProfileBuilder onComplete={handleProfileComplete} />
+        <ProfileBuilder 
+          onComplete={handleProfileComplete}
+          initialProfile={currentUser?.profile}
+          initialPreferences={currentUser?.preferences}
+        />
       )}
 
       {/* Show Matches */}
       {!showProfileBuilder && currentUser && (
         <>
           {/* Header */}
-          <div className="border-b border-gray-800 bg-dark-900/95 backdrop-blur-xl sticky top-0 z-40">
+          <div className="border-b border-gray-800 bg-surface-elevated">
             <div className="container-custom py-6">
               <div className="flex items-center justify-between mb-4">
                 <div>
@@ -126,7 +336,7 @@ export default function RoommateMatchingPage() {
                     Found {matches.length} compatible roommates in your area
                   </p>
                 </div>
-                <Button variant="outline" onClick={handleStartOver}>
+                <Button variant="outline" onClick={handleEditProfile}>
                   Edit Profile
                 </Button>
               </div>
@@ -196,6 +406,11 @@ export default function RoommateMatchingPage() {
                         matchedUser={matchedUser}
                         aiInsight={aiInsights[match.matchedUserId]}
                         loadingInsight={loadingInsights[match.matchedUserId]}
+                        isConnected={connectedUsers.has(match.matchedUserId)}
+                        isSaved={savedMatches.has(match.matchedUserId)}
+                        onConnect={() => handleConnect(match.matchedUserId)}
+                        onSave={() => handleSaveMatch(match.matchedUserId)}
+                        onMessage={() => handleOpenChat(matchedUser)}
                       />
                     );
                   })
@@ -212,7 +427,7 @@ export default function RoommateMatchingPage() {
                         ? `We found ${locationStats.totalInCity} users in ${currentUser?.profile.city}, but none match your preferences yet. Try adjusting your budget or area preferences.`
                         : 'Be the first in your city! Share PGLife with friends to grow the community.'}
                     </p>
-                    <Button variant="primary" onClick={handleStartOver}>
+                    <Button variant="primary" onClick={handleEditProfile}>
                       Adjust Preferences
                     </Button>
                   </Card>
@@ -221,6 +436,95 @@ export default function RoommateMatchingPage() {
             </div>
           </div>
         </>
+      )}
+      
+      {/* Chat Modal */}
+      {chatModal.isOpen && chatModal.user && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-surface max-w-2xl w-full rounded-2xl shadow-2xl flex flex-col max-h-[80vh]">
+            {/* Header */}
+            <div className="p-6 border-b border-gray-800 bg-gradient-to-r from-trust-500/10 to-emerald-500/10">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-trust-500 to-emerald-600 rounded-xl flex items-center justify-center text-white font-bold text-lg">
+                    {chatModal.user.profile.name.charAt(0)}
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-100">
+                      {chatModal.user.profile.name}
+                    </h3>
+                    <p className="text-sm text-gray-400">
+                      {chatModal.user.profile.college || chatModal.user.profile.company}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setChatModal({ isOpen: false, user: null })}
+                  className="text-gray-400 hover:text-gray-200 text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              {messages[chatModal.user.profile.id]?.length > 0 ? (
+                messages[chatModal.user.profile.id].map((msg, idx) => (
+                  <div
+                    key={idx}
+                    className={`flex ${msg.sender === 'me' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`max-w-[70%] rounded-2xl px-4 py-3 ${
+                        msg.sender === 'me'
+                          ? 'bg-trust-500 text-white'
+                          : 'bg-surface-elevated text-gray-100'
+                      }`}
+                    >
+                      <p className="text-sm">{msg.text}</p>
+                      <p className={`text-xs mt-1 ${
+                        msg.sender === 'me' ? 'text-trust-200' : 'text-gray-500'
+                      }`}>
+                        {msg.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 bg-surface-elevated rounded-full flex items-center justify-center mx-auto mb-4">
+                    💬
+                  </div>
+                  <p className="text-gray-400 text-sm">
+                    Start a conversation with {chatModal.user.profile.name}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Input */}
+            <div className="p-4 border-t border-gray-800 bg-surface-elevated">
+              <div className="flex gap-3">
+                <input
+                  type="text"
+                  value={messageInput}
+                  onChange={(e) => setMessageInput(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                  placeholder="Type your message..."
+                  className="flex-1 bg-surface border border-gray-700 rounded-xl px-4 py-3 text-gray-100 placeholder-gray-500 focus:outline-none focus:border-trust-500"
+                />
+                <Button
+                  variant="primary"
+                  onClick={handleSendMessage}
+                  disabled={!messageInput.trim()}
+                >
+                  Send
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -308,9 +612,14 @@ interface MatchCardV2Props {
   matchedUser: { profile: UserProfile; preferences: UserPreferences };
   aiInsight?: string;
   loadingInsight?: boolean;
+  isConnected: boolean;
+  isSaved: boolean;
+  onConnect: () => void;
+  onSave: () => void;
+  onMessage: () => void;
 }
 
-function MatchCardV2({ match, matchedUser, aiInsight, loadingInsight }: MatchCardV2Props) {
+function MatchCardV2({ match, matchedUser, aiInsight, loadingInsight, isConnected, isSaved, onConnect, onSave, onMessage }: MatchCardV2Props) {
   const [showDetails, setShowDetails] = useState(false);
 
   const getScoreColor = (score: number) => {
@@ -461,11 +770,29 @@ function MatchCardV2({ match, matchedUser, aiInsight, loadingInsight }: MatchCar
 
         {/* Actions */}
         <div className="flex gap-3 pt-4">
-          <Button variant="primary" fullWidth>
-            Connect
-          </Button>
-          <Button variant="outline" fullWidth>
-            Save for Later
+          {isConnected ? (
+            <Button 
+              variant="primary" 
+              fullWidth 
+              onClick={onMessage}
+            >
+              💬 Message
+            </Button>
+          ) : (
+            <Button 
+              variant="primary" 
+              fullWidth
+              onClick={onConnect}
+            >
+              ✓ Connect
+            </Button>
+          )}
+          <Button 
+            variant={isSaved ? 'default' : 'outline'} 
+            fullWidth
+            onClick={onSave}
+          >
+            {isSaved ? '⭐ Saved' : 'Save for Later'}
           </Button>
         </div>
       </div>

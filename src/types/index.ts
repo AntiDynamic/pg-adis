@@ -240,5 +240,229 @@ export interface CardProps {
   className?: string;
 }
 
+<<<<<<< HEAD
+=======
+// ========== PG PROOF, REVIEWS & TRUST SYSTEM ==========
+
+export interface PGMedia {
+  id: string;
+  pgId: string;
+  type: 'photo' | 'video';
+  title: string;
+  description?: string;
+  url: string;
+  category: 'room' | 'washroom' | 'common-area' | 'food' | 'other';
+  uploadedBy: 'owner' | 'verified-admin';
+  verified: boolean;
+  verifiedAt?: Date;
+  uploadedAt: Date;
+  views?: number;
+}
+
+export interface PGMediaGallery {
+  pgId: string;
+  photos: PGMedia[];
+  videos: PGMedia[];
+  verifiedCount: number; // Number of verified media items
+  lastUpdated: Date;
+}
+
+export interface StudentReview {
+  id: string;
+  pgId: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  rating: 1 | 2 | 3 | 4 | 5;
+  title: string;
+  description: string;
+  stayDuration: {
+    months: number;
+    from: Date;
+    to: Date;
+  };
+  aspects?: {
+    cleanliness: number;
+    foodQuality: number;
+    ownerBehavior: number;
+    maintenance: number;
+  };
+  photos?: string[]; // Optional photos from stay
+  verified: boolean; // Verified that user stayed here
+  helpful: number;
+  unhelpful: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface PGReviewsSummary {
+  pgId: string;
+  averageRating: number;
+  totalReviews: number;
+  ratingDistribution: {
+    five: number;
+    four: number;
+    three: number;
+    two: number;
+    one: number;
+  };
+  recentReviews: StudentReview[];
+  aspectAverages?: {
+    cleanliness: number;
+    foodQuality: number;
+    ownerBehavior: number;
+    maintenance: number;
+  };
+}
+
+export interface OwnerInteractionState {
+  pgId: string;
+  userId: string;
+  userCity: string;
+  userCoordinates?: { lat: number; lng: number };
+  pgCoordinates: { lat: number; lng: number };
+  pgCity: string;
+  distanceKm?: number;
+  isNearby: boolean; // Within same city or <50km
+  preferredContact: 'video-call' | 'physical-visit' | 'both';
+}
+
+export interface OwnerContactLog {
+  id: string;
+  pgId: string;
+  userId: string;
+  contactType: 'video-call' | 'physical-visit' | 'message';
+  status: 'requested' | 'scheduled' | 'completed' | 'cancelled';
+  scheduledAt?: Date;
+  completedAt?: Date;
+  notes?: string;
+  createdAt: Date;
+}
+
+// ========== PG OWNER VERIFICATION SYSTEM ==========
+
+export type VerificationStatus = 'pending_verification' | 'verified' | 'rejected' | 'resubmission_required';
+
+export interface PGOwnerProfile {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  alternatePhone?: string;
+  aadharNumber?: string; // For KYC
+  verified: boolean;
+  verifiedAt?: Date;
+  pgListings: string[]; // Array of PG IDs owned
+  createdAt: Date;
+}
+
+export interface PGOwnershipProof {
+  pgId: string;
+  ownerId: string;
+  
+  // Required Documents
+  ownershipDocument: {
+    type: 'electricity-bill' | 'water-bill' | 'property-tax' | 'rental-agreement' | 'ownership-deed';
+    fileUrl: string;
+    fileName: string;
+    uploadedAt: Date;
+  };
+  
+  // Required Photos (minimum 5)
+  roomPhotos: Array<{
+    url: string;
+    category: 'room' | 'washroom' | 'kitchen' | 'common-area' | 'entrance' | 'exterior';
+    description?: string;
+    uploadedAt: Date;
+  }>;
+  
+  // Required Video Walkthrough
+  videoWalkthrough: {
+    url: string;
+    duration: number; // in seconds (30-90)
+    thumbnailUrl?: string;
+    uploadedAt: Date;
+  };
+  
+  verificationStatus: VerificationStatus;
+  verifiedBy?: string; // Admin ID who verified
+  verificationNotes?: string;
+  rejectionReason?: string;
+  submittedAt: Date;
+  reviewedAt?: Date;
+}
+
+export interface PGListingWithVerification extends PGListing {
+  ownerId: string;
+  verificationStatus: VerificationStatus;
+  ownershipProof?: PGOwnershipProof;
+  lastVerifiedAt?: Date;
+  
+  // Enhanced details for owner listings
+  totalBeds: number;
+  availableBeds: number;
+  rules: string[];
+  securityDeposit: number;
+  noticePeriod: number; // in days
+}
+
+export interface PGOwnerSignupData {
+  // Step 1: Basic Info
+  ownerInfo: {
+    name: string;
+    email: string;
+    phone: string;
+    alternatePhone?: string;
+    aadharNumber?: string;
+  };
+  
+  // Step 2: PG Details
+  pgDetails: {
+    name: string;
+    genderType: 'male' | 'female' | 'unisex';
+    address: {
+      street: string;
+      area: string;
+      city: string;
+      state: string;
+      pincode: string;
+      coordinates?: { lat: number; lng: number };
+    };
+    totalBeds: number;
+    availableBeds: number;
+    roomTypes: RoomType[];
+    rent: number;
+    securityDeposit: number;
+    amenities: string[];
+    rules: string[];
+    messIncluded: boolean;
+    noticePeriod: number;
+  };
+  
+  // Step 3: Proofs (uploaded files)
+  proofs: {
+    ownershipDoc: File | null;
+    roomPhotos: File[];
+    videoWalkthrough: File | null;
+  };
+}
+
+export interface VerificationBadgeProps {
+  status: VerificationStatus;
+  size?: 'sm' | 'md' | 'lg';
+  showLabel?: boolean;
+}
+
+export interface OwnerInteractionProps {
+  pgId: string;
+  ownerId: string;
+  userLocation?: { lat: number; lng: number };
+  pgLocation: { lat: number; lng: number };
+  onRequestVideoCall: () => void;
+  onScheduleVisit: () => void;
+}
+
+>>>>>>> 50b19ec (feat: Add PG card image carousel, verification, and trust system enhancements (Jan 2026))
 // Ensure React is imported for type usage
 import React from 'react';
+

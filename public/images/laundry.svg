@@ -1,0 +1,36 @@
+<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+  <!-- Wall -->
+  <rect width="400" height="300" fill="#f5e6d3"/>
+  <!-- Windows -->
+  <rect x="50" y="40" width="70" height="70" fill="#87ceeb" stroke="#333" stroke-width="2"/>
+  <line x1="85" y1="40" x2="85" y2="110" stroke="#333" stroke-width="1"/>
+  <line x1="50" y1="75" x2="120" y2="75" stroke="#333" stroke-width="1"/>
+  
+  <rect x="280" y="40" width="70" height="70" fill="#87ceeb" stroke="#333" stroke-width="2"/>
+  <line x1="315" y1="40" x2="315" y2="110" stroke="#333" stroke-width="1"/>
+  <line x1="280" y1="75" x2="350" y2="75" stroke="#333" stroke-width="1"/>
+  <!-- Door -->
+  <rect x="10" y="150" width="45" height="120" fill="#8b6f47" stroke="#333" stroke-width="2"/>
+  <circle cx="50" cy="210" r="4" fill="#ffd700"/>
+  <!-- Laundry Basket -->
+  <rect x="90" y="160" width="50" height="50" fill="#d3d3d3" stroke="#333" stroke-width="2"/>
+  <path d="M 95 160 Q 90 140 105 130 Q 120 140 115 160" fill="#dcdcdc" stroke="#333" stroke-width="1"/>
+  <!-- Washing Machine -->
+  <rect x="180" y="100" width="80" height="80" fill="#c0c0c0" stroke="#333" stroke-width="2"/>
+  <circle cx="220" cy="140" r="25" fill="#e8e8e8" stroke="#333" stroke-width="2"/>
+  <circle cx="220" cy="140" r="18" fill="#0a0a0a"/>
+  <!-- Water droplets -->
+  <circle cx="210" cy="190" r="2" fill="#87ceeb"/>
+  <circle cx="220" cy="200" r="2" fill="#87ceeb"/>
+  <circle cx="230" cy="190" r="2" fill="#87ceeb"/>
+  <!-- Drying Rack -->
+  <rect x="290" y="140" width="70" height="80" fill="none" stroke="#8b4513" stroke-width="2"/>
+  <line x1="290" y1="160" x2="360" y2="160" stroke="#8b4513" stroke-width="1"/>
+  <line x1="290" y1="180" x2="360" y2="180" stroke="#8b4513" stroke-width="1"/>
+  <line x1="290" y1="200" x2="360" y2="200" stroke="#8b4513" stroke-width="1"/>
+  <!-- Shelves -->
+  <rect x="100" y="220" width="200" height="70" fill="none" stroke="#8b7355" stroke-width="2"/>
+  <line x1="100" y1="250" x2="300" y2="250" stroke="#8b7355" stroke-width="1"/>
+  <!-- Text -->
+  <text x="200" y="295" font-size="16" font-weight="bold" text-anchor="middle" fill="#333">Laundry Area</text>
+</svg>

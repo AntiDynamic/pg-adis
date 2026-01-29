@@ -19,43 +19,80 @@ import { CheckIcon, SparklesIcon } from './ui/Icons';
 interface ProfileBuilderProps {
   onComplete: (profile: UserProfile, preferences: UserPreferences) => void;
   onCancel?: () => void;
+  initialProfile?: UserProfile;
+  initialPreferences?: UserPreferences;
 }
 
-export const ProfileBuilder: React.FC<ProfileBuilderProps> = ({ onComplete, onCancel }) => {
+export const ProfileBuilder: React.FC<ProfileBuilderProps> = ({ 
+  onComplete, 
+  onCancel,
+  initialProfile,
+  initialPreferences
+}) => {
   const [step, setStep] = useState(1);
   
-  // Basic Info State
-  const [name, setName] = useState('');
-  const [age, setAge] = useState('');
-  const [gender, setGender] = useState<'male' | 'female' | 'other'>('male');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
-  const [city, setCity] = useState('');
-  const [occupation, setOccupation] = useState<'student' | 'working'>('student');
-  const [college, setCollege] = useState('');
-  const [company, setCompany] = useState('');
+  // Basic Info State - Initialize with existing data if available
+  const [name, setName] = useState(initialProfile?.name || '');
+  const [age, setAge] = useState(initialProfile?.age?.toString() || '');
+  const [gender, setGender] = useState<'male' | 'female' | 'other'>(initialProfile?.gender || 'male');
+  const [phone, setPhone] = useState(initialProfile?.phone || '');
+  const [email, setEmail] = useState(initialProfile?.email || '');
+  const [city, setCity] = useState(initialProfile?.city || '');
+  const [occupation, setOccupation] = useState<'student' | 'working'>(
+    initialProfile?.college ? 'student' : initialProfile?.company ? 'working' : 'student'
+  );
+  const [college, setCollege] = useState(initialProfile?.college || '');
+  const [company, setCompany] = useState(initialProfile?.company || '');
   
-  // Living Preferences State
-  const [budgetMin, setBudgetMin] = useState('');
-  const [budgetMax, setBudgetMax] = useState('');
-  const [preferredArea, setPreferredArea] = useState('');
-  const [roomSharing, setRoomSharing] = useState<'single' | 'double' | 'triple'>('double');
-  const [moveInDate, setMoveInDate] = useState('');
-  const [stayDuration, setStayDuration] = useState('6');
+  // Living Preferences State - Initialize with existing data if available
+  const [budgetMin, setBudgetMin] = useState(initialPreferences?.budgetMin?.toString() || '');
+  const [budgetMax, setBudgetMax] = useState(initialPreferences?.budgetMax?.toString() || '');
+  const [preferredArea, setPreferredArea] = useState(initialPreferences?.preferredAreas?.[0] || '');
+  const [roomSharing, setRoomSharing] = useState<'single' | 'double' | 'triple'>(
+    initialPreferences?.roomSharing || 'double'
+  );
+  const [moveInDate, setMoveInDate] = useState(
+    initialPreferences?.moveInDate 
+      ? new Date(initialPreferences.moveInDate).toISOString().split('T')[0] 
+      : ''
+  );
+  const [stayDuration, setStayDuration] = useState(initialPreferences?.stayDuration?.toString() || '6');
   
-  // Lifestyle Matching State (MOST IMPORTANT)
-  const [cleanlinessLevel, setCleanlinessLevel] = useState<1 | 2 | 3 | 4 | 5>(3);
-  const [sleepTime, setSleepTime] = useState<'early' | 'normal' | 'late'>('normal');
-  const [wakeTime, setWakeTime] = useState<'early' | 'normal' | 'late'>('normal');
-  const [foodPreference, setFoodPreference] = useState<'veg' | 'non-veg' | 'egg' | 'vegan'>('veg');
-  const [smoking, setSmoking] = useState<'no' | 'occasionally' | 'yes'>('no');
-  const [drinking, setDrinking] = useState<'no' | 'occasionally' | 'yes'>('no');
-  const [noiseTolerance, setNoiseTolerance] = useState<'low' | 'medium' | 'high'>('medium');
-  const [guestsFrequency, setGuestsFrequency] = useState<'rare' | 'sometimes' | 'often'>('rare');
-  const [introvertExtrovert, setIntrovertExtrovert] = useState<1 | 2 | 3 | 4 | 5>(3);
-  const [conflictHandling, setConflictHandling] = useState<'calm' | 'direct' | 'avoidant'>('calm');
-  const [acPreference, setAcPreference] = useState(false);
-  const [genderPreference, setGenderPreference] = useState<'male' | 'female' | 'any'>('any');
+  // Lifestyle Matching State - Initialize with existing data if available
+  const [cleanlinessLevel, setCleanlinessLevel] = useState<1 | 2 | 3 | 4 | 5>(
+    initialPreferences?.cleanlinessLevel || 3
+  );
+  const [sleepTime, setSleepTime] = useState<'early' | 'normal' | 'late'>(
+    initialPreferences?.sleepTime || 'normal'
+  );
+  const [wakeTime, setWakeTime] = useState<'early' | 'normal' | 'late'>(
+    initialPreferences?.wakeTime || 'normal'
+  );
+  const [foodPreference, setFoodPreference] = useState<'veg' | 'non-veg' | 'egg' | 'vegan'>(
+    initialPreferences?.foodPreference || 'veg'
+  );
+  const [smoking, setSmoking] = useState<'no' | 'occasionally' | 'yes'>(
+    initialPreferences?.smoking || 'no'
+  );
+  const [drinking, setDrinking] = useState<'no' | 'occasionally' | 'yes'>(
+    initialPreferences?.drinking || 'no'
+  );
+  const [noiseTolerance, setNoiseTolerance] = useState<'low' | 'medium' | 'high'>(
+    initialPreferences?.noiseTolerance || 'medium'
+  );
+  const [guestsFrequency, setGuestsFrequency] = useState<'rare' | 'sometimes' | 'often'>(
+    initialPreferences?.guestsFrequency || 'rare'
+  );
+  const [introvertExtrovert, setIntrovertExtrovert] = useState<1 | 2 | 3 | 4 | 5>(
+    initialPreferences?.introvertExtrovert || 3
+  );
+  const [conflictHandling, setConflictHandling] = useState<'calm' | 'direct' | 'avoidant'>(
+    initialPreferences?.conflictHandling || 'calm'
+  );
+  const [acPreference, setAcPreference] = useState(initialPreferences?.acPreference || false);
+  const [genderPreference, setGenderPreference] = useState<'male' | 'female' | 'any'>(
+    initialPreferences?.genderPreference || 'any'
+  );
 
   const handleNext = () => {
     if (step < 3) setStep(step + 1);
@@ -66,25 +103,28 @@ export const ProfileBuilder: React.FC<ProfileBuilderProps> = ({ onComplete, onCa
   };
 
   const handleSubmit = () => {
+    // Normalize city name: trim and capitalize first letter
+    const normalizedCity = city.trim().charAt(0).toUpperCase() + city.trim().slice(1).toLowerCase();
+    
     const profile: UserProfile = {
-      id: `user_${Date.now()}`,
+      id: initialProfile?.id || `user_${Date.now()}`,
       name,
       age: parseInt(age),
       gender,
       phone,
       email,
-      city,
+      city: normalizedCity,
       college: occupation === 'student' ? college : undefined,
       company: occupation === 'working' ? company : undefined,
-      verified: false,
-      createdAt: new Date(),
+      verified: initialProfile?.verified || false,
+      createdAt: initialProfile?.createdAt || new Date(),
     };
 
     const preferences: UserPreferences = {
       userId: profile.id,
       budgetMin: parseInt(budgetMin),
       budgetMax: parseInt(budgetMax),
-      preferredAreas: [preferredArea],
+      preferredAreas: [preferredArea.trim()],
       roomSharing,
       moveInDate: new Date(moveInDate),
       stayDuration: parseInt(stayDuration),

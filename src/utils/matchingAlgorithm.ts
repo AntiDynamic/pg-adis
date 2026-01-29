@@ -306,8 +306,8 @@ export function filterByHardRequirements(
       !(userPref.budgetMax < currentPref.budgetMin || userPref.budgetMin > currentPref.budgetMax);
     if (!hasBudgetOverlap) return false;
 
-    // Same city
-    if (user.profile.city !== currentUser.profile.city) return false;
+    // Same city (case-insensitive comparison)
+    if (user.profile.city.toLowerCase() !== currentUser.profile.city.toLowerCase()) return false;
 
     // Gender preference
     if (currentPref.genderPreference && currentPref.genderPreference !== 'any') {

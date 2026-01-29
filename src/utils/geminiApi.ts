@@ -1,33 +1,17 @@
 /**
- * GEMINI AI INTEGRATION
+ * GEMINI AI INTEGRATION - Updated for New API (January 2026)
  * 
- * Optional AI layer on top of rule-based matching
- * Uses Google's Gemini API to:
+ * Uses Google's Gemini API (@google/genai) to:
  * 1. Enhance match explanations with natural language
  * 2. Provide personalized roommate advice
- * 3. Learn from successful matches over time
+ * 3. Generate compatibility insights
  */
 
-const GEMINI_API_KEY = 'AIzaSyAihP_FmuArwrOqsgTwBdwNIBGM-kGZfsE';
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+import { GoogleGenAI } from '@google/genai';
 
-interface GeminiRequest {
-  contents: {
-    parts: {
-      text: string;
-    }[];
-  }[];
-}
-
-interface GeminiResponse {
-  candidates: {
-    content: {
-      parts: {
-        text: string;
-      }[];
-    };
-  }[];
-}
+// Initialize the Gemini client with API key
+const GEMINI_API_KEY = 'AIzaSyArBnjyaB9y8xb1D8dKYY-9W9DUutHFoh8';
+const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 /**
  * Generate personalized match explanation using Gemini AI
@@ -37,47 +21,79 @@ export async function generateMatchInsights(
   user2Name: string,
   matchScore: number,
   reasons: string[],
-  warnings: string[]
+  warnings: string[],
+  user1Profile?: any,
+  user2Profile?: any
 ): Promise<string> {
-  const prompt = `You are a roommate compatibility expert. Two people, ${user1Name} and ${user2Name}, have been matched with a compatibility score of ${matchScore}/100.
+  // Build detailed context about both users for deeper insights
+  let contextualInfo = '';
+  
+  if (user1Profile && user2Profile) {
+    contextualInfo = `
 
-Match reasons:
-${reasons.map((r) => `- ${r}`).join('\n')}
+DETAILED USER PROFILES:
 
-Potential concerns:
-${warnings.map((w) => `- ${w}`).join('\n')}
+${user1Name}:
+- College: ${user1Profile.profile?.college || 'Not specified'}
+- Year: ${user1Profile.profile?.year || 'Not specified'}
+- Budget Range: ₹${user1Profile.profile?.budgetMin || '0'} - ₹${user1Profile.profile?.budgetMax || '0'}
+- Lifestyle Preferences:
+  * Cleanliness: ${user1Profile.preferences?.cleanlinessLevel || 'Not specified'}/5
+  * Sleep Schedule: ${user1Profile.preferences?.sleepSchedule || 'Not specified'}
+  * Food Preference: ${user1Profile.preferences?.foodPreference || 'Not specified'}
+  * Smoking: ${user1Profile.preferences?.smokingTolerance || 'Not specified'}
+  * Drinking: ${user1Profile.preferences?.drinkingTolerance || 'Not specified'}
+  * Noise Tolerance: ${user1Profile.preferences?.noiseTolerance || 'Not specified'}
+  * Guest Policy: ${user1Profile.preferences?.guestPolicy || 'Not specified'}
+  * Personality: ${user1Profile.preferences?.personalityType || 'Not specified'}
+${user1Profile.profile?.bio ? `- About: ${user1Profile.profile.bio}` : ''}
 
-Write a brief (2-3 sentences), friendly, and honest assessment of their compatibility. Be encouraging but realistic. Focus on practical living together advice.`;
+${user2Name}:
+- College: ${user2Profile.profile?.college || 'Not specified'}
+- Year: ${user2Profile.profile?.year || 'Not specified'}
+- Budget Range: ₹${user2Profile.profile?.budgetMin || '0'} - ₹${user2Profile.profile?.budgetMax || '0'}
+- Lifestyle Preferences:
+  * Cleanliness: ${user2Profile.preferences?.cleanlinessLevel || 'Not specified'}/5
+  * Sleep Schedule: ${user2Profile.preferences?.sleepSchedule || 'Not specified'}
+  * Food Preference: ${user2Profile.preferences?.foodPreference || 'Not specified'}
+  * Smoking: ${user2Profile.preferences?.smokingTolerance || 'Not specified'}
+  * Drinking: ${user2Profile.preferences?.drinkingTolerance || 'Not specified'}
+  * Noise Tolerance: ${user2Profile.preferences?.noiseTolerance || 'Not specified'}
+  * Guest Policy: ${user2Profile.preferences?.guestPolicy || 'Not specified'}
+  * Personality: ${user2Profile.preferences?.personalityType || 'Not specified'}
+${user2Profile.profile?.bio ? `- About: ${user2Profile.profile.bio}` : ''}`;
+  }
+
+  const prompt = `You are an expert roommate compatibility analyst with deep understanding of student living dynamics in India. Analyze this potential roommate match in detail.
+
+COMPATIBILITY OVERVIEW:
+- Match Score: ${matchScore}/100
+- Candidates: ${user1Name} and ${user2Name}
+${contextualInfo}
+
+COMPATIBILITY STRENGTHS:
+${reasons.map((r) => `✓ ${r}`).join('\n')}
+
+POTENTIAL CHALLENGES:
+${warnings.length > 0 ? warnings.map((w) => `⚠ ${w}`).join('\n') : '✓ No major concerns identified'}
+
+TASK: Provide a comprehensive, personalized compatibility analysis in 4-6 well-structured sentences covering:
+
+1. **Overall Assessment**: Start with an honest, nuanced evaluation of their compatibility level
+2. **Key Strengths**: Highlight the 2-3 most important alignments that make this a promising match
+3. **Lifestyle Compatibility**: Discuss how their daily routines, habits, and preferences complement each other
+4. **Challenge Management**: Address potential friction points and provide practical advice on handling them
+5. **Actionable Recommendations**: Give 1-2 specific suggestions for making this roommate relationship successful
+
+Write in a warm, conversational, yet insightful tone. Be realistic but encouraging. Focus on practical living dynamics relevant to Indian college students sharing a PG. Use natural language without bullet points or section headers in your response.`;
 
   try {
-    const requestBody: GeminiRequest = {
-      contents: [
-        {
-          parts: [
-            {
-              text: prompt,
-            },
-          ],
-        },
-      ],
-    };
-
-    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
     });
 
-    if (!response.ok) {
-      console.error('Gemini API error:', response.statusText);
-      return getFallbackInsight(matchScore);
-    }
-
-    const data: GeminiResponse = await response.json();
-    const aiText = data.candidates[0]?.content?.parts[0]?.text;
-
+    const aiText = response.text;
     return aiText || getFallbackInsight(matchScore);
   } catch (error) {
     console.error('Error calling Gemini API:', error);
@@ -97,38 +113,16 @@ export async function getProfileImprovementTips(
   }
 
   const prompt = `A user has filled out their roommate matching profile with ${profileCompleteness}% completeness. 
-  
-Preferences filled: ${JSON.stringify(preferences, null, 2)}
 
-Suggest 3 brief, practical tips to improve their profile and get better matches. Each tip should be one short sentence.`;
+Provide 3 brief, actionable tips to improve their profile and find better matches. Focus on completeness and specificity. Each tip should be one short sentence.`;
 
   try {
-    const requestBody: GeminiRequest = {
-      contents: [
-        {
-          parts: [
-            {
-              text: prompt,
-            },
-          ],
-        },
-      ],
-    };
-
-    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
     });
 
-    if (!response.ok) {
-      return getDefaultImprovementTips(profileCompleteness);
-    }
-
-    const data: GeminiResponse = await response.json();
-    const aiText = data.candidates[0]?.content?.parts[0]?.text || '';
+    const aiText = response.text || '';
 
     // Parse tips from AI response
     const tips = aiText
@@ -156,32 +150,12 @@ Common interests: ${commonInterests.join(', ')}
 Generate 3 natural, friendly conversation starter questions they could ask each other when first chatting. Keep them casual and relevant to living together.`;
 
   try {
-    const requestBody: GeminiRequest = {
-      contents: [
-        {
-          parts: [
-            {
-              text: prompt,
-            },
-          ],
-        },
-      ],
-    };
-
-    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
     });
 
-    if (!response.ok) {
-      return getDefaultConversationStarters();
-    }
-
-    const data: GeminiResponse = await response.json();
-    const aiText = data.candidates[0]?.content?.parts[0]?.text || '';
+    const aiText = response.text || '';
 
     const starters = aiText
       .split('\n')
@@ -232,27 +206,12 @@ function getDefaultConversationStarters(): string[] {
  */
 export async function validateGeminiApiKey(): Promise<boolean> {
   try {
-    const testRequest: GeminiRequest = {
-      contents: [
-        {
-          parts: [
-            {
-              text: 'Test',
-            },
-          ],
-        },
-      ],
-    };
-
-    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(testRequest),
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: 'Test',
     });
 
-    return response.ok;
+    return !!response.text;
   } catch {
     return false;
   }
